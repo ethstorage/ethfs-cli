@@ -72,8 +72,10 @@ class Uploader {
         this.#nonce = await this.#wallet.getNonce();
         if (this.#uploadType === VERSION_BLOB) {
             return await this.supportBlob();
+        } else if (this.#uploadType === VERSION_CALL_DATA) {
+            return true;
         }
-        return true;
+        return false;
     }
 
     getNonce() {
@@ -83,7 +85,7 @@ class Uploader {
     async uploadFile(fileInfo) {
         if (this.#uploadType === VERSION_BLOB) {
             return await this.upload4844File(fileInfo);
-        } else {
+        } else if (this.#uploadType === VERSION_CALL_DATA) {
             return await this.uploadOldFile(fileInfo);
         }
     };

@@ -4,7 +4,7 @@ const { ethers } = require("ethers");
 const { normalize } = require('eth-ens-namehash');
 const sha3 = require('js-sha3').keccak_256;
 const { from, mergeMap } = require('rxjs');
-const {Uploader, VERSION_BLOB} = require("./upload/Uploader");
+const {Uploader, VERSION_BLOB, VERSION_CALL_DATA} = require("./upload/Uploader");
 
 const color = require('colors-cli/safe')
 const error = color.red.bold;
@@ -43,7 +43,6 @@ const SHORT_NAME_POLYGON_MUMBAI = "maticmum";
 const SHORT_NAME_POLYGON_ZKEVM_TEST = "zkevmtest";
 const SHORT_NAME_QUARKCHAIN = "qkc-s0";
 const SHORT_NAME_QUARKCHAIN_DEVNET = "qkc-d-s0";
-const SHORT_NAME_ETH_STORAGE = "es";
 
 const GALILEO_CHAIN_ID = 3334;
 const ETHEREUM_CHAIN_ID = 1;
@@ -69,7 +68,6 @@ const POLYGON_MUMBAI_CHAIN_ID = 80001;
 const POLYGON_ZKEVM_TEST_CHAIN_ID = 1402;
 const QUARKCHAIN_CHAIN_ID = 100001;
 const QUARKCHAIN_DEVNET_CHAIN_ID = 110001;
-const ETH_STORAGE_CHAIN_ID = 3333;
 
 const NETWORK_MAPING = {
   [SHORT_NAME_GALILEO]: GALILEO_CHAIN_ID,
@@ -96,7 +94,6 @@ const NETWORK_MAPING = {
   [SHORT_NAME_POLYGON_ZKEVM_TEST]: POLYGON_ZKEVM_TEST_CHAIN_ID,
   [SHORT_NAME_QUARKCHAIN]: QUARKCHAIN_CHAIN_ID,
   [SHORT_NAME_QUARKCHAIN_DEVNET]: QUARKCHAIN_DEVNET_CHAIN_ID,
-  [SHORT_NAME_ETH_STORAGE]: ETH_STORAGE_CHAIN_ID
 }
 
 const PROVIDER_URLS = {
@@ -124,7 +121,6 @@ const PROVIDER_URLS = {
   [POLYGON_ZKEVM_TEST_CHAIN_ID]: 'https://rpc.public.zkevm-test.net',
   [QUARKCHAIN_CHAIN_ID]: 'https://mainnet-s0-ethapi.quarkchain.io',
   [QUARKCHAIN_DEVNET_CHAIN_ID]: 'https://devnet-s0-ethapi.quarkchain.io',
-  [ETH_STORAGE_CHAIN_ID]: 'http://65.108.236.27:9540',
 }
 
 const NS_ADDRESS = {
@@ -136,6 +132,9 @@ const NS_ADDRESS = {
 // eip-4844
 const ETH_STORAGE_ADDRESS = {
   [SEPOLIA_CHAIN_ID]: '0x804C520d3c084C805E37A35E90057Ac32831F96f',
+}
+const ETH_STORAGE_RPC = {
+  [SEPOLIA_CHAIN_ID]: 'http://65.108.236.27:9540',
 }
 
 const CHAIN_ID_DEFAULT = ETHEREUM_CHAIN_ID;
@@ -314,7 +313,7 @@ const checkBalance = async (provider, domainAddr, accountAddr) => {
 // **** function ****
 const createDirectory = async (key, chainId, rpc) => {
   if (!ethers.isHexString(key, 32)) {
-    console.error(error(`ERROR: Invalid private key!`));
+    console.error(error(`ERROR: invalid private key!`));
     return;
   }
 
@@ -350,13 +349,13 @@ const createDirectory = async (key, chainId, rpc) => {
   }
 };
 
-const refund = async (key, domain, chainId, rpc) => {
+const refund = async (key, domain, rpc, chainId) => {
   if (!ethers.isHexString(key)) {
-    console.error(error(`ERROR: Invalid private key!`));
+    console.error(error(`ERROR: invalid private key!`));
     return;
   }
   if (!domain) {
-    console.error(error(`ERROR: Invalid address!`));
+    console.error(error(`ERROR: invalid address!`));
     return;
   }
 
@@ -369,17 +368,17 @@ const refund = async (key, domain, chainId, rpc) => {
   }
 };
 
-const setDefault = async (key, domain, filename, rpc) => {
+const setDefault = async (key, domain, filename, rpc, chainId) => {
   if (!ethers.isHexString(key)) {
-    console.error(error(`ERROR: Invalid private key!`));
+    console.error(error(`ERROR: invalid private key!`));
     return;
   }
   if (!domain) {
-    console.error(error(`ERROR: Invalid address!`));
+    console.error(error(`ERROR: invalid address!`));
     return;
   }
 
-  const {providerUrl, address} = await getWebHandler(domain, rpc);
+  const {providerUrl, address} = await getWebHandler(domain, rpc, chainId);
   if (providerUrl && parseInt(address) > 0) {
     const ethStorage = new EthStorage(providerUrl, key, address);
     await ethStorage.setDefaultFile(filename);
@@ -388,23 +387,55 @@ const setDefault = async (key, domain, filename, rpc) => {
   }
 };
 
-const download = async (domain, fileName, rpc) => {
+const remove = async (key, domain, fileName, rpc, chainId) => {
+  if (!ethers.isHexString(key)) {
+    console.error(error(`ERROR: invalid private key!`));
+    return;
+  }
   if (!domain) {
-    console.error(error(`ERROR: Invalid address!`));
+    console.error(error(`ERROR: invalid address!`));
     return;
   }
   if (!fileName) {
-    console.error(error(`ERROR: Invalid file name!`));
+    console.error(error(`ERROR: invalid file name!`));
     return;
   }
 
-  let {providerUrl, chainId, address} = await getWebHandler(domain, rpc);
+  const {providerUrl, address} = await getWebHandler(domain, rpc, chainId);
   if (providerUrl && parseInt(address) > 0) {
+    console.log(`Removing file ${fileName}`);
+    const provider = new ethers.JsonRpcProvider(providerUrl);
+    const wallet = new ethers.Wallet(key, provider);
+    let prevInfo;
+    await checkBalance(provider, address, wallet.address).then(info => {
+      prevInfo = info;
+    })
+
+    const ethStorage = new EthStorage(providerUrl, key, address);
+    await ethStorage.remove(fileName);
+
+    await checkBalance(provider, address, wallet.address).then(info => {
+      console.log(`domainBalance: ${info.domainBalance}, accountBalance: ${info.accountBalance}, balanceChange: ${prevInfo.accountBalance - info.accountBalance}`);
+    })
+  }
+}
+
+const download = async (domain, fileName, rpc, chainId) => {
+  if (!domain) {
+    console.error(error(`ERROR: invalid address!`));
+    return;
+  }
+  if (!fileName) {
+    console.error(error(`ERROR: invalid file name!`));
+    return;
+  }
+
+  let handler = await getWebHandler(domain, rpc, chainId);
+  if (parseInt(handler.address) > 0) {
     // replace rpc to eth storage
-    if (chainId === DEVNET_CHAIN_ID) {
-      providerUrl = PROVIDER_URLS[ETH_STORAGE_CHAIN_ID];
-    }
-    const buf = await DownloadFile(providerUrl, address, fileName);
+    const esRpc = ETH_STORAGE_RPC[handler.chainId];
+    rpc = esRpc ?? handler.providerUrl;
+    const buf = await DownloadFile(rpc, handler.address, fileName);
     if (buf.length > 0) {
       const dir = `${__dirname}/download/`;
       const savePath = `${dir}/${fileName}`;
@@ -421,60 +452,37 @@ const download = async (domain, fileName, rpc) => {
   }
 }
 
-const remove = async (key, domain, fileName, rpc) => {
+const deploy = async (key, domain, path, type, rpc, chainId) => {
   if (!ethers.isHexString(key)) {
-    console.error(error(`ERROR: Invalid private key!`));
+    console.error(error(`ERROR: invalid private key!`));
     return;
   }
   if (!domain) {
-    console.error(error(`ERROR: Invalid address!`));
+    console.error(error(`ERROR: invalid address!`));
     return;
   }
-  if (!fileName) {
-    console.error(error(`ERROR: Invalid file name!`));
-    return;
-  }
-
-  const {providerUrl, address} = await getWebHandler(domain, rpc);
-  if (providerUrl && parseInt(address) > 0) {
-    console.log(`Removing file ${fileName}`);
-    const provider = new ethers.JsonRpcProvider(providerUrl);
-    const wallet = new ethers.Wallet(key, provider);
-    let prevInfo;
-    await checkBalance(provider, address, wallet.address).then(info => {
-      prevInfo = info;
-    })
-
-    const ethStorage = new EthStorage(providerUrl, key, address);
-    await ethStorage.remove(fileName);
-
-    await checkBalance(provider, address, wallet.address).then(info => {
-      console.log(`domainBalance: ${info.domainBalance}, accountBalance: ${info.accountBalance}, 
-        balanceChange: ${prevInfo.accountBalance - info.accountBalance}`);
-    })
-  }
-}
-
-const deploy = async (key, domain, path, rpc, type = VERSION_BLOB) => {
-  if (!ethers.isHexString(key)) {
-    console.error(error(`ERROR: Invalid private key!`));
-    return;
-  }
-  if (!domain) {
-    console.error(error(`ERROR: Invalid address!`));
+  if (!path) {
+    console.error(error(`ERROR: invalid file!`));
     return;
   }
 
-  const {providerUrl, chainId, address} = await getWebHandler(domain, rpc);
-  if (providerUrl && parseInt(address) > 0) {
+  // {providerUrl, chainId, address}
+  const handler = await getWebHandler(domain, rpc, chainId);
+  if (handler.providerUrl && parseInt(handler.address) > 0) {
+    chainId = handler.chainId;
     let syncPoolSize = 15;
     if (chainId === ARBITRUM_NOVE_CHAIN_ID) {
       syncPoolSize = 4;
-    } else if(chainId === DEVNET_CHAIN_ID) {
-      syncPoolSize = 2;
     }
 
-    const uploader  = new Uploader(key, providerUrl, chainId, address, type);
+    if (!type) {
+      type = VERSION_CALL_DATA;
+      if (ETH_STORAGE_RPC[chainId]) {
+        type = VERSION_BLOB;
+      }
+    }
+
+    const uploader  = new Uploader(key, handler.providerUrl, chainId, handler.address, type);
     const check = await uploader.init();
     if (!check) {
       console.log(`ERROR: The current network does not support this upload type, please switch to another type.  Type=${type}`);

@@ -32,7 +32,7 @@ program
     .option('-r, --rpc [rpc]', 'provider url')
     .action(() => {
         const opts = program.opts();
-        refund(opts.privateKey, opts.address, opts.chainId, opts.rpc);
+        refund(opts.privateKey, opts.address, opts.rpc, opts.chainId);
     });
 
 program
@@ -45,7 +45,7 @@ program
     .option('-r, --rpc [rpc]', 'provider url')
     .action(() => {
         const opts = program.opts();
-        setDefault(opts.privateKey, opts.address, opts.file, opts.rpc);
+        setDefault(opts.privateKey, opts.address, opts.file, opts.rpc, opts.chainId);
     });
 
 program
@@ -58,7 +58,7 @@ program
     .option('-r, --rpc [rpc]', 'provider url')
     .action(() => {
         const opts = program.opts();
-        remove(opts.privateKey, opts.address, opts.file, opts.rpc);
+        remove(opts.privateKey, opts.address, opts.file, opts.rpc, opts.chainId);
     });
 
 program
@@ -70,7 +70,7 @@ program
     .option('-r, --rpc [rpc]', 'provider url')
     .action(() => {
         const opts = program.opts();
-        download(opts.address, opts.file, opts.rpc);
+        download(opts.address, opts.file, opts.rpc, opts.chainId);
     });
 
 program
@@ -84,7 +84,7 @@ program
     .option('-r, --rpc [rpc]', 'provider url')
     .action(() => {
         const opts = program.opts();
-        deploy(opts.privateKey, opts.address, opts.file, opts.rpc, opts.type);
+        deploy(opts.privateKey, opts.address, opts.file, opts.type, opts.rpc,  opts.chainId);
     });
 
 program.parse(process.argv);
