@@ -1,5 +1,5 @@
 {
-  "name": "eth-fs",
+  "name": "ethfs-cli",
   "version": "1.0.0",
   "description": "A tool to upload files easily to a filesystem smart contract following ERC-5018.",
   "main": "index.js",

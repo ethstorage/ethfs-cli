@@ -4,13 +4,13 @@
 Globally:
 ```bash
 npm install -g ethfs-cli
-eth-fs deploy <directory|file> <address> <private-key> -r [rpc] -t [upload-type]
+ethfs-cli deploy <directory|file> <address> <private-key> -r [rpc] -t [upload-type]
 ```
 
 Locally:
 ```bash
 npm install ethfs-cli
-npx eth-fs deploy <directory|file> <address> <private-key> -r [rpc] -t [upload-type]
+npx ethfs-cli deploy <directory|file> <address> <private-key> -r [rpc] -t [upload-type]
 ```
 <br/>
 
@@ -125,21 +125,21 @@ w3ns
 ### Set FlatDirectory Default Entrance
 ```
 FlatDirectory address
-  eth-fs default -a <address> -f <fileName> -p <privateKey> -r [rpc]
+  ethfs-cli default -a <address> -f <fileName> -p <privateKey> -r [rpc]
 ens
-  eth-fs default -a <name> -f <fileName> -p <privateKey> -r [rpc]
+  ethfs-cli default -a <name> -f <fileName> -p <privateKey> -r [rpc]
 w3ns
-  eth-fs default -a <name> -f <fileName> -p <privateKey> -r [rpc]
+  ethfs-cli default -a <name> -f <fileName> -p <privateKey> -r [rpc]
 ```
 ##### Example
 ```
 FlatDirectory address
-  eth-fs default -a gor:0x1825...2388 -f index.html -p 0x32...
-  eth-fs default -a xxx:0x1825...2388 -f index.html -p 0x32... -r https://rpc.xxx
+  ethfs-cli default -a gor:0x1825...2388 -f index.html -p 0x32...
+  ethfs-cli default -a xxx:0x1825...2388 -f index.html -p 0x32... -r https://rpc.xxx
 ens
-  eth-fs default -a eth:ens.eth -f index.html -p 0x32... -r https://rpc.ankr.com/eth
+  ethfs-cli default -a eth:ens.eth -f index.html -p 0x32... -r https://rpc.ankr.com/eth
 w3ns
-  eth-fs default -a w3q-g:home.w3q -f index.html -p 0x32...  -r https://rpc.ankr.com/eth
+  ethfs-cli default -a w3q-g:home.w3q -f index.html -p 0x32...  -r https://rpc.ankr.com/eth
 ```
 <br/>
 
@@ -148,21 +148,21 @@ w3ns
 ### Remove File
 ```
 FlatDirectory address
-  eth-fs remove -a <address> -f <fileName> -p <privateKey> -r [rpc]
+  ethfs-cli remove -a <address> -f <fileName> -p <privateKey> -r [rpc]
 ens
-  eth-fs remove -a <name> -f <fileName> -p <privateKey> -r [rpc]
+  ethfs-cli remove -a <name> -f <fileName> -p <privateKey> -r [rpc]
 w3ns
-  eth-fs remove -a <name> -f <fileName> -p <privateKey> -r [rpc]
+  ethfs-cli remove -a <name> -f <fileName> -p <privateKey> -r [rpc]
 ```
 ##### Example
 ```
 FlatDirectory address
-  eth-fs remove -a gor:0x1825...2388 -f index.html -p 0x32...
-  eth-fs remove -a xxx:0x1825...2388 -f index.html -p 0x32... -r https://rpc.xxx
+  ethfs-cli remove -a gor:0x1825...2388 -f index.html -p 0x32...
+  ethfs-cli remove -a xxx:0x1825...2388 -f index.html -p 0x32... -r https://rpc.xxx
 ens
-  eth-fs remove -a eth:ens.eth -f src/home.vue -p 0x32... -r https://rpc.ankr.com/eth
+  ethfs-cli remove -a eth:ens.eth -f src/home.vue -p 0x32... -r https://rpc.ankr.com/eth
 w3ns
-  eth-fs remove -a w3q-g:home.w3q -f src/home.vue -p 0x32... -r https://rpc.ankr.com/eth
+  ethfs-cli remove -a w3q-g:home.w3q -f src/home.vue -p 0x32... -r https://rpc.ankr.com/eth
 ```
 <br/>
 
@@ -170,23 +170,23 @@ w3ns
 ### Download File
 ```
 FlatDirectory address
-  eth-fs download -a <address> -f <fileName> -r [rpc]
+  ethfs-cli download -a <address> -f <fileName> -r [rpc]
 ens
-  eth-fs download -a <name> -f <fileName> -r [rpc]
+  ethfs-cli download -a <name> -f <fileName> -r [rpc]
 w3ns
-  eth-fs download --address <name> --file <fileName> --rpc [rpc]
+  ethfs-cli download --address <name> --file <fileName> --rpc [rpc]
 ```
 ##### Example
 ```
 FlatDirectory address
-    npx eth-fs download -a gor:0x1825...2388 -f index.html
-    npx eth-fs download -a xxx:0x1825...2388 -f index.html -r https://rpc.xxx
+    npx ethfs-cli download -a gor:0x1825...2388 -f index.html
+    npx ethfs-cli download -a xxx:0x1825...2388 -f index.html -r https://rpc.xxx
 ens
-    npx eth-fs download -a eth:ens.eth -f home.vue
+    npx ethfs-cli download -a eth:ens.eth -f home.vue
 w3ns
-    npx eth-fs download --address w3q-g:home.w3q --file home.vue --rpc https://rpc.xxx
+    npx ethfs-cli download --address w3q-g:home.w3q --file home.vue --rpc https://rpc.xxx
 ```
 <br/>
 
 ### Repo
-[Github Repo](https://github.com/QuarkChain/eth-fs)
+[Github Repo](https://github.com/QuarkChain/ethfs-cli)
