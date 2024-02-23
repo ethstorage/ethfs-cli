@@ -4,25 +4,25 @@
 Globally:
 ```bash
 npm install -g ethfs-cli
-ethfs-cli deploy <directory|file> <address> <private-key> -r [rpc] -t [upload-type]
+ethfs-cli deploy -f <directory|file> -a <address> -p <private-key> -r [rpc] -t [upload-type]
 ```
 
 Locally:
 ```bash
 npm install ethfs-cli
-npx ethfs-cli deploy <directory|file> <address> <private-key> -r [rpc] -t [upload-type]
+npx ethfs-cli deploy -f <directory|file> -a <address> -p <private-key> -r [rpc] -t [upload-type]
 ```
 <br/>
 
 ## Command
-| Short Name | Full Name    | description                                  |   
-|------------|--------------|----------------------------------------------|
-| -p         | --privateKey | private key                                  |
-| -a         | --address    | contract address / domain name               |
-| -f         | --file       | upload file path / name                      |
-| -c         | --chainId    | chain id                                     |
-| -r         | --rpc        | provider url                                 |
-| -t         | --type       | file upload type<br/>calldata: 1<br/>blob: 2 |
+| Short Name | Full Name    | description                                |   
+|------------|--------------|--------------------------------------------|
+| -p         | --privateKey | private key                                |
+| -a         | --address    | contract address / domain name             |
+| -f         | --file       | upload file path / name                    |
+| -c         | --chainId    | chain id                                   |
+| -r         | --rpc        | provider url                               |
+| -t         | --type       | file save type<br/>on chain: 1<br/>blob: 2 |
  <br/>
 
 ## Supported networks
