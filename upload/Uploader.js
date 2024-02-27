@@ -13,7 +13,7 @@ const fileBlobAbi = [
     "function countChunks(bytes memory name) external view returns (uint256)",
     "function getChunkHash(bytes memory name, uint256 chunkId) public view returns (bytes32)",
     "function isSupportBlob() view public returns (bool)",
-    "function getFileMode(bytes memory name) public view returns(uint256)"
+    "function getStorageMode(bytes memory name) public view returns(uint256)"
 ];
 
 const GALILEO_CHAIN_ID = 3334;
@@ -30,16 +30,16 @@ const MAX_BLOB_COUNT = 3;
 const VERSION_CALL_DATA = '1';
 const VERSION_BLOB = '2';
 
+const getFileChunk = (path, fileSize, index, length) => {
+    const start = index * length;
+    const end = (index + 1) * length > fileSize ? fileSize : (index + 1) * length;
+    length = end - start;
 
-const bufferChunk = (buffer, chunkSize) => {
-    let i = 0;
-    let result = [];
-    const len = buffer.length;
-    const chunkLength = Math.ceil(len / chunkSize);
-    while (i < len) {
-        result.push(buffer.slice(i, i += chunkLength));
-    }
-    return result;
+    const buf = new Buffer(length);
+    const fd = fs.openSync(path, 'r');
+    fs.readSync(fd, buf, 0, length, start);
+    fs.closeSync(fd);
+    return buf;
 }
 
 const sleep = (ms) => {
@@ -98,12 +98,12 @@ class Uploader {
         }
     }
 
-    async getFileMode(hexName) {
+    async getStorageMode(hexName) {
         try {
-            return await this.#fileContract.getFileMode(hexName);
+            return await this.#fileContract.getStorageMode(hexName);
         } catch (e) {
             await sleep(3000);
-            return await this.#fileContract.getFileMode(hexName);
+            return await this.#fileContract.getStorageMode(hexName);
         }
     }
 
@@ -178,7 +178,7 @@ class Uploader {
         const fileSize = size;
 
         const hexName = '0x' + Buffer.from(fileName, 'utf8').toString('hex');
-        const fileMod = await this.getFileMode(hexName);
+        const fileMod = await this.getStorageMode(hexName);
         if (fileMod === BigInt(VERSION_CALL_DATA)) {
             console.log(error(`ERROR: This file does not support blob upload! file=${fileName}`));
             return {upload: 0, fileName: fileName};
@@ -188,12 +188,10 @@ class Uploader {
         const content = fs.readFileSync(filePath);
         const blobs = EncodeBlobs(content);
 
-        // TODO can not remove
-        // const clearState = await this.clearOldFile(this.#fileContract, fileName, hexName, blobs.length);
-        // if (clearState === REMOVE_FAIL) {
-        //     return {upload: 0, fileName: fileName};
-        // }
-        const clearState = REMOVE_NORMAL;
+        const clearState = await this.clearOldFile(this.#fileContract, fileName, hexName, blobs.length);
+        if (clearState === REMOVE_FAIL) {
+            return {upload: 0, fileName: fileName};
+        }
 
         const cost = await this.getCost();
         const blobLength = blobs.length;
@@ -277,54 +275,44 @@ class Uploader {
 
     async uploadOldFile(fileInfo) {
         const {path, name, size} = fileInfo;
-        const filePath = path;
         const fileName = name;
-        let fileSize = size;
-
+        const fileSize = size;
         const hexName = '0x' + Buffer.from(fileName, 'utf8').toString('hex');
-        const fileMod = await this.getFileMode(hexName);
-        if (fileMod === BigInt(VERSION_BLOB)) {
+
+        const fileMod = await this.getStorageMode(hexName);
+        if (fileMod !== BigInt(VERSION_CALL_DATA) && fileMod !== 0n) {
             console.log(error(`ERROR: This file does not support calldata upload! file=${fileName}`));
             return {upload: 0, fileName: fileName};
         }
 
-        const content = fs.readFileSync(filePath);
-        let chunks = [];
+        let chunkLength = 1;
+        let chunkDataSize = fileSize;
         if (this.#chainId === GALILEO_CHAIN_ID) {
             // Data need to be sliced if file > 475K
             if (fileSize > 475 * 1024) {
-                const chunkSize = Math.ceil(fileSize / (475 * 1024));
-                chunks = bufferChunk(content, chunkSize);
-                fileSize = fileSize / chunkSize;
-            } else {
-                chunks.push(content);
+                chunkDataSize = 475 * 1024;
+                chunkLength = Math.ceil(fileSize / (475 * 1024));
             }
         } else {
             // Data need to be sliced if file > 24K
             if (fileSize > 24 * 1024 - 326) {
-                const chunkSize = Math.ceil(fileSize / (24 * 1024 - 326));
-                chunks = bufferChunk(content, chunkSize);
-                fileSize = fileSize / chunkSize;
-            } else {
-                chunks.push(content);
+                chunkDataSize = 24 * 1024 - 326;
+                chunkLength = Math.ceil(fileSize / (24 * 1024 - 326));
             }
         }
 
-        const clearState = await this.clearOldFile(this.#fileContract, fileName, hexName, chunks.length);
+        // remove old chunk
+        const clearState = await this.clearOldFile(this.#fileContract, fileName, hexName, chunkLength);
         if (clearState === REMOVE_FAIL) {
             return {upload: 0, fileName: fileName};
         }
 
-        let cost = 0;
-        if ((this.#chainId === GALILEO_CHAIN_ID) && (fileSize > 24 * 1024 - 326)) {
-            // eth storage need stake
-            cost = Math.floor((fileSize + 326) / 1024 / 24);
-        }
-
         let uploadCount = 0;
-        const failFile = [];
-        for (const index in chunks) {
-            const chunk = chunks[index];
+        let failIndex = -1;
+        let totalCost = 0;
+        let totalUploadSize = 0;
+        for (let i = 0; i < chunkLength; i++) {
+            const chunk = getFileChunk(path, fileSize, i, chunkDataSize);
             const hexData = '0x' + chunk.toString('hex');
 
             if (clearState === REMOVE_NORMAL) {
@@ -332,25 +320,32 @@ class Uploader {
                 const localHash = '0x' + sha3(chunk);
                 let hash;
                 try {
-                    hash = await this.#fileContract.getChunkHash(hexName, index);
+                    hash = await this.#fileContract.getChunkHash(hexName, i);
                 } catch (e) {
                     await sleep(3000);
-                    hash = await this.#fileContract.getChunkHash(hexName, index);
+                    hash = await this.#fileContract.getChunkHash(hexName, i);
                 }
                 if (localHash === hash) {
-                    console.log(`File ${fileName} chunkId: ${index}: The data is not changed.`);
+                    console.log(`File ${fileName} chunkId: ${i}: The data is not changed.`);
                     continue;
                 }
             }
 
+            // get cost
+            let cost = 0;
+            if ((this.#chainId === GALILEO_CHAIN_ID) && (chunk.length > 24 * 1024 - 326)) {
+                // eth storage need stake
+                cost = Math.floor((chunk.length + 326) / 1024 / 24);
+            }
+
             let estimatedGas;
             try {
-                estimatedGas = await this.#fileContract.writeChunk.estimateGas(hexName, index, hexData, {
+                estimatedGas = await this.#fileContract.writeChunk.estimateGas(hexName, i, hexData, {
                     value: ethers.parseEther(cost.toString())
                 });
             } catch (e) {
                 await sleep(3000);
-                estimatedGas = await this.#fileContract.writeChunk.estimateGas(hexName, index, hexData, {
+                estimatedGas = await this.#fileContract.writeChunk.estimateGas(hexName, i, hexData, {
                     value: ethers.parseEther(cost.toString())
                 });
             }
@@ -363,21 +358,23 @@ class Uploader {
             };
             let tx;
             try {
-                tx = await this.#fileContract.writeChunk(hexName, index, hexData, option);
+                tx = await this.#fileContract.writeChunk(hexName, i, hexData, option);
             } catch (e) {
                 await sleep(5000);
-                tx = await this.#fileContract.writeChunk(hexName, index, hexData, option);
+                tx = await this.#fileContract.writeChunk(hexName, i, hexData, option);
             }
-            console.log(`${fileName}, chunkId: ${index}`);
+            console.log(`${fileName}, chunkId: ${i}`);
             console.log(`Transaction Id: ${tx.hash}`);
 
             // get result
             const txReceipt = await tx.wait();
             if (txReceipt && txReceipt.status) {
-                console.log(`File ${fileName} chunkId: ${index} uploaded!`);
+                console.log(`File ${fileName} chunkId: ${i} uploaded!`);
                 uploadCount++;
+                totalCost += cost;
+                totalUploadSize += chunk.length;
             } else {
-                failFile.push(index);
+                failIndex = i;
                 break;
             }
         }
@@ -385,15 +382,16 @@ class Uploader {
         return {
             upload: 1,
             fileName: fileName,
-            cost: cost,
-            fileSize: fileSize / 1024,
+            totalCost: totalCost,
+            totalUploadSize: totalUploadSize / 1024,
             uploadCount: uploadCount,
-            failFile: failFile
+            failIndex: failIndex
         };
     }
 }
 
 module.exports = {
     Uploader,
+    VERSION_CALL_DATA,
     VERSION_BLOB
 }

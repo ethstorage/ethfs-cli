@@ -498,14 +498,12 @@ const deploy = async (key, domain, path, type, rpc, chainId) => {
         .subscribe(
             (info) => {
               if (info.upload === 1) {
-                if (info.failFile && info.failFile.length > 0) {
-                  for (const index of info.failFile) {
-                    failPool.push(info.fileName + " Chunk:" + index);
-                  }
+                if (info.failIndex > -1) {
+                  failPool.push(info.fileName + " Chunk:" + info.failIndex);
                 }
                 totalFileCount += info.uploadCount;
-                totalCost += info.uploadCount * info.cost;
-                totalFileSize += info.uploadCount * info.fileSize;
+                totalCost += info.totalCost;
+                totalFileSize += info.totalUploadSize;
               } else {
                 failPool.push(info.fileName);
               }

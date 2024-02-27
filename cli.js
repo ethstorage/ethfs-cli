@@ -74,8 +74,8 @@ program
     });
 
 program
-    .command('upload')
-    .description('upload file|directory')
+    .command('deploy')
+    .description('deploy file|directory')
     .option('-p, --privateKey <privateKey>', 'private key')
     .option('-a, --address <address>', 'flat directory address')
     .option('-f, --file <file>', 'upload file|directory path')
