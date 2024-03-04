@@ -1,7 +1,7 @@
 const fs = require('fs');
 const sha3 = require('js-sha3').keccak_256;
 const {ethers} = require("ethers");
-const {BlobUploader, EncodeBlobs, BLOB_FILE_SIZE} = require("ethstorage-sdk");
+const {BlobUploader, EncodeBlobs, BLOB_DATA_SIZE} = require("ethstorage-sdk");
 const color = require("colors-cli/safe");
 const error = color.red.bold;
 
@@ -30,11 +30,9 @@ const MAX_BLOB_COUNT = 3;
 const VERSION_CALL_DATA = '1';
 const VERSION_BLOB = '2';
 
-const getFileChunk = (path, fileSize, index, length) => {
-    const start = index * length;
-    const end = (index + 1) * length > fileSize ? fileSize : (index + 1) * length;
-    length = end - start;
-
+const getFileChunk = (path, fileSize, start, end) => {
+    end = end > fileSize ? fileSize : end;
+    const length = end - start;
     const buf = new Buffer(length);
     const fd = fs.openSync(path, 'r');
     fs.readSync(fd, buf, 0, length, start);
@@ -179,37 +177,40 @@ class Uploader {
 
         const hexName = '0x' + Buffer.from(fileName, 'utf8').toString('hex');
         const fileMod = await this.getStorageMode(hexName);
-        if (fileMod === BigInt(VERSION_CALL_DATA)) {
+        if (fileMod !== 0n && fileMod !== BigInt(VERSION_BLOB)) {
             console.log(error(`ERROR: This file does not support blob upload! file=${fileName}`));
             return {upload: 0, fileName: fileName};
         }
 
+        // TODO OP_BLOB_DATA_SIZE;
+        const blobDataSize = BLOB_DATA_SIZE;
+        const blobLength = Math.ceil(fileSize / blobDataSize);
 
-        const content = fs.readFileSync(filePath);
-        const blobs = EncodeBlobs(content);
-
-        const clearState = await this.clearOldFile(this.#fileContract, fileName, hexName, blobs.length);
+        const clearState = await this.clearOldFile(this.#fileContract, fileName, hexName, blobLength);
         if (clearState === REMOVE_FAIL) {
             return {upload: 0, fileName: fileName};
         }
 
         const cost = await this.getCost();
-        const blobLength = blobs.length;
 
-        const failFile = [];
         let uploadCount = 0;
+        let failIndex = -1;
+        let totalCost = 0;
+        let totalUploadSize = 0;
         for (let i = 0; i < blobLength; i += MAX_BLOB_COUNT) {
+            const content = getFileChunk(filePath, fileSize, i * blobDataSize, (i + MAX_BLOB_COUNT) * blobDataSize);
+            const blobs = EncodeBlobs(content);
+
             const blobArr = [];
             const indexArr = [];
             const lenArr = [];
-            let max = i + MAX_BLOB_COUNT > blobLength ? blobLength : i + MAX_BLOB_COUNT;
-            for (let j = i; j < max; j++) {
+            for (let j = 0; j < blobs.length; j++) {
                 blobArr.push(blobs[j]);
-                indexArr.push(j);
-                if (j === blobLength - 1) {
-                    lenArr.push(fileSize - BLOB_FILE_SIZE * (blobLength - 1));
+                indexArr.push(i + j);
+                if (i + j === blobLength - 1) {
+                    lenArr.push(fileSize - blobDataSize * (blobLength - 1));
                 } else {
-                    lenArr.push(BLOB_FILE_SIZE);
+                    lenArr.push(blobDataSize);
                 }
             }
 
@@ -231,15 +232,11 @@ class Uploader {
             }
 
 
-            const fee = await this.#blobUploader.getFee();
             const value = cost * BigInt(blobArr.length);
             const tx = await this.#fileContract.writeChunks.populateTransaction(hexName, indexArr, lenArr, {
                 nonce: this.getNonce(),
                 value: value,
-                maxFeePerGas: fee.maxFeePerGas * BigInt(6) / BigInt(5),
-                maxPriorityFeePerGas: fee.maxPriorityFeePerGas * BigInt(6) / BigInt(5),
             });
-            tx.maxFeePerBlobGas = ethers.parseUnits('30', 9);
             console.log(`${fileName}, chunkId: ${indexArr}`);
 
             let hash;
@@ -253,12 +250,16 @@ class Uploader {
                 if (txReceipt && txReceipt.status) {
                     console.log(`File ${fileName} chunkId: ${indexArr} uploaded!`);
                     uploadCount += indexArr.length;
+                    totalCost += Number(ethers.formatEther(value));
+                    for (let j = 0; j < lenArr.length; j++) {
+                        totalUploadSize += lenArr[j];
+                    }
                 } else {
-                    failFile.push(indexArr[0]);
+                    failIndex = indexArr[0];
                     break;
                 }
             } else {
-                failFile.push(indexArr[0]);
+                failIndex = indexArr[0];
                 break;
             }
         }
@@ -266,10 +267,10 @@ class Uploader {
         return {
             upload: 1,
             fileName: fileName,
-            cost: Number(ethers.formatEther(cost)),
-            fileSize: fileSize / blobLength / 1024,
+            totalCost: totalCost,
+            totalUploadSize: totalUploadSize / 1024,
             uploadCount: uploadCount,
-            failFile: failFile
+            failIndex: failIndex
         };
     }
 
@@ -312,7 +313,8 @@ class Uploader {
         let totalCost = 0;
         let totalUploadSize = 0;
         for (let i = 0; i < chunkLength; i++) {
-            const chunk = getFileChunk(path, fileSize, i, chunkDataSize);
+            const chunk = getFileChunk(path, fileSize, i * chunkDataSize, (i + 1) * chunkDataSize);
+            console.log("chunk length",chunk.length);
             const hexData = '0x' + chunk.toString('hex');
 
             if (clearState === REMOVE_NORMAL) {
@@ -338,22 +340,10 @@ class Uploader {
                 cost = Math.floor((chunk.length + 326) / 1024 / 24);
             }
 
-            let estimatedGas;
-            try {
-                estimatedGas = await this.#fileContract.writeChunk.estimateGas(hexName, i, hexData, {
-                    value: ethers.parseEther(cost.toString())
-                });
-            } catch (e) {
-                await sleep(3000);
-                estimatedGas = await this.#fileContract.writeChunk.estimateGas(hexName, i, hexData, {
-                    value: ethers.parseEther(cost.toString())
-                });
-            }
-
             // upload file
             const option = {
                 nonce: this.getNonce(),
-                gasLimit: estimatedGas * BigInt(6) / BigInt(5),
+                gasLimit: 21000000n,
                 value: ethers.parseEther(cost.toString())
             };
             let tx;
