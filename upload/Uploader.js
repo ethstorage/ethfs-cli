@@ -314,7 +314,6 @@ class Uploader {
         let totalUploadSize = 0;
         for (let i = 0; i < chunkLength; i++) {
             const chunk = getFileChunk(path, fileSize, i * chunkDataSize, (i + 1) * chunkDataSize);
-            console.log("chunk length",chunk.length);
             const hexData = '0x' + chunk.toString('hex');
 
             if (clearState === REMOVE_NORMAL) {
