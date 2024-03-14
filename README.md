@@ -1,16 +1,16 @@
-# EthFS-CLI
+# ethfs-cli
 
 ## Installation
 Globally:
 ```bash
 npm install -g ethfs-cli
-ethfs-cli deploy -f <directory|file> -a <address> -p <private-key> -r [rpc] -t [upload-type]
+ethfs-cli upload -f <directory|file> -a <address> -p <private-key> -r [rpc] -t [upload-type]
 ```
 
 Locally:
 ```bash
 npm install ethfs-cli
-npx ethfs-cli deploy -f <directory|file> -a <address> -p <private-key> -r [rpc] -t [upload-type]
+npx ethfs-cli upload -f <directory|file> -a <address> -p <private-key> -r [rpc] -t [upload-type]
 ```
 <br/>
 
@@ -97,27 +97,27 @@ ethfs-cli create -p 0x32... -c 1 -r https://rpc.ankr.com/eth
 
 
 
-### Deploy Command
+### Upload Command
 Upload files, you need to specify the upload type. The default type is blob:2.<br/>
 If you want to use name instead of FlatDirectory address, the name should be pointed to the FlatDirectory 
 address in advance. Click [here](https://docs.web3url.io/advanced-topics/bind-ens-name-to-a-chain-specific-address) for details.
 ```
 FlatDirectory address
-  ethfs-cli deploy -f <directory|file> -a <address> -p <privateKey> -r [rpc] -t [uploadType]
+  ethfs-cli upload -f <directory|file> -a <address> -p <privateKey> -r [rpc] -t [uploadType]
 ens
-  ethfs-cli deploy -f <directory|file> -a <name> -p <privateKey> -r [rpc] -t [uploadType]
+  ethfs-cli upload -f <directory|file> -a <name> -p <privateKey> -r [rpc] -t [uploadType]
 w3ns
-  ethfs-cli deploy -f <directory|file> -a <name> -p <privateKey> -r [rpc] -t [uploadType]
+  ethfs-cli upload -f <directory|file> -a <name> -p <privateKey> -r [rpc] -t [uploadType]
 ```
 ##### Example
 ```
 FlatDirectory address
-  ethfs-cli deploy -f index.html -a gor:0x1825...2388 -p 0x32...
-  ethfs-cli deploy -f index.html -a xxx:0x1825...2388 -p 0x32... -r https://rpc.xxx -t 1
+  ethfs-cli upload -f index.html -a gor:0x1825...2388 -p 0x32...
+  ethfs-cli upload -f index.html -a xxx:0x1825...2388 -p 0x32... -r https://rpc.xxx -t 1
 ens
-  ethfs-cli deploy -f dist -a eth:ens.eth -p 0x32... -r https://rpc.ankr.com/eth -t 2
+  ethfs-cli upload -f dist -a eth:ens.eth -p 0x32... -r https://rpc.ankr.com/eth -t 2
 w3ns
-  ethfs-cli deploy -f dist -a w3q-g:home.w3q -p 0x32... -t 2
+  ethfs-cli upload -f dist -a w3q-g:home.w3q -p 0x32... -t 2
 ```
 <br/>
 

@@ -452,7 +452,7 @@ const download = async (domain, fileName, rpc, chainId) => {
   }
 }
 
-const deploy = async (key, domain, path, type, rpc, chainId) => {
+const upload = async (key, domain, path, type, rpc, chainId) => {
   if (!ethers.isHexString(key)) {
     console.error(error(`ERROR: invalid private key!`));
     return;
@@ -529,7 +529,7 @@ const deploy = async (key, domain, path, type, rpc, chainId) => {
 };
 // **** function ****
 
-module.exports.deploy = deploy;
+module.exports.upload = upload;
 module.exports.create = createDirectory;
 module.exports.refund = refund;
 module.exports.remove = remove;

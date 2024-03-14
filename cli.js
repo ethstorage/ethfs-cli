@@ -2,7 +2,7 @@
 const { program } = require('commander');
 program.version(require('./package.json').version);
 
-const { create, refund, deploy, remove, setDefault, download } = require("./index");
+const { create, refund, upload, remove, setDefault, download } = require("./index");
 
 program
     .option('-p, --privateKey [privateKey]', 'private key')
@@ -74,7 +74,7 @@ program
     });
 
 program
-    .command('deploy')
+    .command('upload')
     .description('deploy file|directory')
     .option('-p, --privateKey <privateKey>', 'private key')
     .option('-a, --address <address>', 'flat directory address')
@@ -84,7 +84,7 @@ program
     .option('-r, --rpc [rpc]', 'provider url')
     .action(() => {
         const opts = program.opts();
-        deploy(opts.privateKey, opts.address, opts.file, opts.type, opts.rpc,  opts.chainId);
+        upload(opts.privateKey, opts.address, opts.file, opts.type, opts.rpc,  opts.chainId);
     });
 
 program.parse(process.argv);
