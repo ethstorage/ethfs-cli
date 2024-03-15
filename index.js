@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const { EthStorage, DownloadFile } = require("ethstorage-sdk");
 const { ethers } = require("ethers");
 const { normalize } = require('eth-ens-namehash');
@@ -437,8 +438,8 @@ const download = async (domain, fileName, rpc, chainId) => {
     rpc = esRpc ?? handler.providerUrl;
     const buf = await DownloadFile(rpc, handler.address, fileName);
     if (buf.length > 0) {
-      const dir = `${__dirname}/download/`;
-      const savePath = `${dir}/${fileName}`;
+      const dir = path.join(require('os').homedir(), 'Downloads');
+      const savePath = path.join(dir, fileName);
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
       }
