@@ -439,6 +439,9 @@ const download = async (domain, fileName, rpc, chainId) => {
     const buf = await DownloadFile(rpc, handler.address, fileName);
     if (buf.length > 0) {
       const savePath = path.join(process.cwd(), fileName);
+      if (!fs.existsSync(path.dirname(savePath))) {
+        fs.mkdirSync(path.dirname(savePath));
+      }
       fs.writeFileSync(savePath, buf);
       console.log(`Success: file path is ${savePath}`);
     } else {
