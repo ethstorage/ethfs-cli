@@ -1,6 +1,6 @@
 {
   "name": "ethfs-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A tool to upload files easily to a filesystem smart contract following ERC-5018.",
   "main": "index.js",
   "scripts": {
