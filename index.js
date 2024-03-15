@@ -516,7 +516,7 @@ const upload = async (key, domain, path, type, rpc, chainId) => {
                 }
               }
               console.log();
-              console.log(notice(`Total Cost: ${totalCost} W3Q`));
+              console.log(notice(`Total Cost: ${totalCost} ETH`));
               console.log(notice(`Total File Count: ${totalFileCount}`));
               console.log(notice(`Total File Size: ${totalFileSize} KB`));
             });
