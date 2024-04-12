@@ -33,7 +33,7 @@ const VERSION_BLOB = '2';
 const getFileChunk = (path, fileSize, start, end) => {
     end = end > fileSize ? fileSize : end;
     const length = end - start;
-    const buf = new Buffer(length);
+    const buf = Buffer.alloc(length);
     const fd = fs.openSync(path, 'r');
     fs.readSync(fd, buf, 0, length, start);
     fs.closeSync(fd);
@@ -182,7 +182,6 @@ class Uploader {
             return {upload: 0, fileName: fileName};
         }
 
-        // TODO OP_BLOB_DATA_SIZE;
         const blobDataSize = BLOB_DATA_SIZE;
         const blobLength = Math.ceil(fileSize / blobDataSize);
 
