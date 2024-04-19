@@ -218,7 +218,7 @@ class Uploader {
                 let hasChange = false;
                 for (let j = 0; j < blobArr.length; j++) {
                     const dataHash = await this.getChunkHash(hexName, indexArr[j]);
-                    const localHash = this.#blobUploader.getBlobHash(blobArr[j]);
+                    const localHash = await this.#blobUploader.getBlobHash(blobArr[j]);
                     if (dataHash !== localHash) {
                         hasChange = true;
                         break;
@@ -238,14 +238,10 @@ class Uploader {
             });
             console.log(`${fileName}, chunkId: ${indexArr}`);
 
-            let hash;
             try {
-                hash = await this.#blobUploader.sendTx(tx, blobArr);
-                console.log(`Transaction Id: ${hash}`);
-            } catch (e) {}
-            // get result
-            if (hash) {
-                const txReceipt = await this.#blobUploader.getTxReceipt(hash);
+                const txResult = await this.#blobUploader.sendTx(tx, blobArr);
+                console.log(`Transaction Id: ${txResult.hash}`);
+                const txReceipt = await txResult.wait();
                 if (txReceipt && txReceipt.status) {
                     console.log(`File ${fileName} chunkId: ${indexArr} uploaded!`);
                     uploadCount += indexArr.length;
@@ -257,12 +253,12 @@ class Uploader {
                     failIndex = indexArr[0];
                     break;
                 }
-            } else {
+            } catch (e) {
+                console.log("Error: send tx fail!", e.message);
                 failIndex = indexArr[0];
                 break;
             }
         }
-
         return {
             upload: 1,
             fileName: fileName,
