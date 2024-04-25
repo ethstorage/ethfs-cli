@@ -1,11 +1,10 @@
 const fs = require('fs');
 const path = require('path');
-const { EthStorage, DownloadFile } = require("ethstorage-sdk");
+const { EthStorage, Download } = require("ethstorage-sdk");
 const { ethers } = require("ethers");
 const { normalize } = require('eth-ens-namehash');
 const sha3 = require('js-sha3').keccak_256;
-const { from, mergeMap } = require('rxjs');
-const {Uploader, VERSION_BLOB, VERSION_CALL_DATA} = require("./upload/Uploader");
+const { Uploader } = require("./upload/Uploader");
 
 const color = require('colors-cli/safe')
 const error = color.red.bold;
@@ -278,38 +277,18 @@ async function getWebHandler(domain, rpc, chainId) {
   };
 }
 
-const recursiveFiles = (path, basePath) => {
-  let filePools = [];
-  const fileStat = fs.statSync(path);
-  if (fileStat.isFile()) {
-    filePools.push({path: path, name: path.substring(path.lastIndexOf("/") + 1), size: fileStat.size});
-    return filePools;
-  }
-
-  const files = fs.readdirSync(path);
-  for (let file of files) {
-    const fileStat = fs.statSync(`${path}/${file}`);
-    if (fileStat.isDirectory()) {
-      const pools = recursiveFiles(`${path}/${file}`, `${basePath}${file}/`);
-      filePools = filePools.concat(pools);
-    } else {
-      filePools.push({path: `${path}/${file}`, name: `${basePath}${file}`, size: fileStat.size});
-    }
-  }
-  return filePools;
-};
-
-// **** utils ****
 const checkBalance = async (provider, domainAddr, accountAddr) => {
-  return Promise.all([provider.getBalance(domainAddr), provider.getBalance(accountAddr)]).then(values => {
-    return {
-      domainBalance: values[0],
-      accountBalance: values[1]
-    };
-  }, reason => {
-    console.log(reason);
-  });
+  return Promise.all([provider.getBalance(domainAddr), provider.getBalance(accountAddr)])
+      .then(values => {
+          return {
+              domainBalance: values[0],
+              accountBalance: values[1]
+          };
+      }, reason => {
+          console.log(reason);
+      });
 }
+// **** utils ****
 
 // **** function ****
 const createDirectory = async (key, chainId, rpc) => {
@@ -343,11 +322,7 @@ const createDirectory = async (key, chainId, rpc) => {
   console.log("providerUrl =", providerUrl);
   const ethStorage = new EthStorage(providerUrl, key);
   const ethStorageAdd = ETH_STORAGE_ADDRESS[chainId];
-  if (ethStorageAdd) {
-    await ethStorage.deployDirectory(ethStorageAdd);
-  } else {
-    await ethStorage.deployNormalDirectory();
-  }
+  await ethStorage.deploy(ethStorageAdd);
 };
 
 const refund = async (key, domain, rpc, chainId) => {
@@ -382,7 +357,7 @@ const setDefault = async (key, domain, filename, rpc, chainId) => {
   const {providerUrl, address} = await getWebHandler(domain, rpc, chainId);
   if (providerUrl && parseInt(address) > 0) {
     const ethStorage = new EthStorage(providerUrl, key, address);
-    await ethStorage.setDefaultFile(filename);
+    await ethStorage.setDefault(filename);
   } else {
     console.log(error(`ERROR: ${domain} domain doesn't exist`));
   }
@@ -436,7 +411,7 @@ const download = async (domain, fileName, rpc, chainId) => {
     // replace rpc to eth storage
     const esRpc = ETH_STORAGE_RPC[handler.chainId];
     rpc = esRpc ?? handler.providerUrl;
-    const buf = await DownloadFile(rpc, handler.address, fileName);
+    const buf = await Download(rpc, handler.address, fileName);
     if (buf.length > 0) {
       const savePath = path.join(process.cwd(), fileName);
       if (!fs.existsSync(path.dirname(savePath))) {
@@ -475,54 +450,33 @@ const upload = async (key, domain, path, type, rpc, chainId) => {
       syncPoolSize = 4;
     }
 
-    if (!type) {
-      type = VERSION_CALL_DATA;
-      if (ETH_STORAGE_RPC[chainId]) {
-        type = VERSION_BLOB;
-      }
-    }
-
-    const uploader  = new Uploader(key, handler.providerUrl, chainId, handler.address, type);
-    const check = await uploader.init();
+    const uploader = new Uploader(key, handler.providerUrl, chainId, handler.address);
+    const check = await uploader.init(type);
     if (!check) {
       console.log(`ERROR: The current network does not support this upload type, please switch to another type.  Type=${type}`);
       return;
     }
+    const infoArr = await uploader.upload(path, syncPoolSize);
 
-    let failPool = [];
-    let totalCost = 0, totalFileCount = 0, totalFileSize = 0;
-    // get file and remove old chunk
-    console.log("Start upload File.......");
-    from(recursiveFiles(path, ''))
-        .pipe(mergeMap(info => uploader.uploadFile(info), syncPoolSize))
-        .subscribe(
-            (info) => {
-              if (info.upload === 1) {
-                if (info.failIndex > -1) {
-                  failPool.push(info.fileName + " Chunk:" + info.failIndex);
-                }
-                totalFileCount += info.uploadCount;
-                totalCost += info.totalCost;
-                totalFileSize += info.totalUploadSize;
-              } else {
-                failPool.push(info.fileName);
-              }
-            },
-            (error) => {
-              throw error
-            },
-            () => {
-              if (failPool.length > 0) {
-                console.log();
-                for (const file of failPool) {
-                  console.log(error(`ERROR: ${file} uploaded failed.`));
-                }
-              }
-              console.log();
-              console.log(notice(`Total Cost: ${totalCost} ETH`));
-              console.log(notice(`Total File Count: ${totalFileCount}`));
-              console.log(notice(`Total File Size: ${totalFileSize} KB`));
-            });
+    console.log();
+    let totalCost = 0n, totalChunkCount = 0, totalFileSize = 0;
+    for (const file of infoArr) {
+      if (file.status) {
+        totalCost += file.totalCost;
+        totalChunkCount += file.totalUploadCount;
+        totalFileSize += file.totalUploadSize;
+        if (file.totalChunkCount > file.currentSuccessIndex + 1) {
+          console.log(error(`ERROR: ${file.fileName} uploaded failed. The chunkId is ${file.currentSuccessIndex + 1}`));
+        }
+      } else {
+        console.log(error(`ERROR: ${file.fileName} uploaded failed.`));
+      }
+    }
+
+    console.log();
+    console.log(notice(`Total Upload Chunk Count: ${totalChunkCount}`));
+    console.log(notice(`Total Upload File Size: ${totalFileSize} KB`));
+    console.log(notice(`Total Cost: ${ethers.formatEther(totalCost)} ETH`));
   } else {
     console.log(error(`ERROR: ${domain} domain doesn't exist`));
   }

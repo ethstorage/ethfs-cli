@@ -29,6 +29,13 @@ aes-js@4.0.0-beta.5:
   resolved "https://registry.npmjs.org/aes-js/-/aes-js-4.0.0-beta.5.tgz"
   integrity sha512-G965FqalsNyrPqgEGON7nIx1e/OVENSgiEIzyC63haUMuvNnwIgIjMs52hlTCKhkBny7A2ORNlfY9Zu+jmGk1Q==
 
+async-mutex@^0.5.0:
+  version "0.5.0"
+  resolved "https://registry.npmjs.org/async-mutex/-/async-mutex-0.5.0.tgz#353c69a0b9e75250971a64ac203b0ebfddd75482"
+  integrity sha512-1A94B18jkJ3DYq284ohPxoXbfTA5HsQ7/Mf4DEhcyLx3Bz27Rh59iScbB6EPiP+B+joue6YCxcMXSbFC1tZKwA==
+  dependencies:
+    tslib "^2.4.0"
+
 asynckit@^0.4.0:
   version "0.4.0"
   resolved "https://registry.npmjs.org/asynckit/-/asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79"
@@ -43,9 +50,9 @@ axios@^1.6.8:
     form-data "^4.0.0"
     proxy-from-env "^1.1.0"
 
-colors-cli@^1.0.28:
+colors-cli@^1.0.33:
   version "1.0.33"
-  resolved "https://registry.npmjs.org/colors-cli/-/colors-cli-1.0.33.tgz"
+  resolved "https://registry.npmjs.org/colors-cli/-/colors-cli-1.0.33.tgz#22810216e3aaf726b821f6dd3a431a9340ae99cf"
   integrity sha512-PWGsmoJFdOB0t+BeHgmtuoRZUQucOLl5ii81NBzOOGVxlgE04muFNHlR5j8i8MKbOPELBl3243AI6lGBTj5ICQ==
 
 combined-stream@^1.0.8:
@@ -104,15 +111,16 @@ ethers@^6.7.1:
     tslib "2.4.0"
     ws "8.5.0"
 
-ethstorage-sdk@^1.2.2:
-  version "1.2.2"
-  resolved "https://registry.npmjs.org/ethstorage-sdk/-/ethstorage-sdk-1.2.2.tgz#c9b061c603fee74b4d37b0612df6a7f9e9a6bf43"
-  integrity sha512-vURZ1vCb7XOHAB82uxmyhFh+kmpj/ThC5X2qElJF58n1QuFP0Q9oncCzRInCswZqhbLdXkZCW6S+HaO/rvhS8w==
+ethstorage-sdk@/Users/lmp/IdeaProjects/ethstorage-sdk:
+  version "1.2.4"
   dependencies:
+    async-mutex "^0.5.0"
     axios "^1.6.8"
+    colors-cli "^1.0.33"
     dotenv "^16.4.5"
     ethers "^6.12.0"
     kzg-wasm "^0.4.0"
+    rxjs "^7.8.1"
 
 follow-redirects@^1.15.6:
   version "1.15.6"
@@ -177,9 +185,9 @@ punycode@2.1.0:
   resolved "https://registry.npmjs.org/punycode/-/punycode-2.1.0.tgz"
   integrity sha512-Yxz2kRwT90aPiWEMHVYnEf4+rhwF1tBmmZ4KepCP+Wkium9JxtWnUm1nqGwpiAHr/tnTSeHqr3wb++jgSkXjhA==
 
-rxjs@^7.5.5:
+rxjs@^7.8.1:
   version "7.8.1"
-  resolved "https://registry.npmjs.org/rxjs/-/rxjs-7.8.1.tgz"
+  resolved "https://registry.npmjs.org/rxjs/-/rxjs-7.8.1.tgz#6f6f3d99ea8044291efd92e7c7fcf562c4057543"
   integrity sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==
   dependencies:
     tslib "^2.1.0"
@@ -189,7 +197,7 @@ tslib@2.4.0:
   resolved "https://registry.npmjs.org/tslib/-/tslib-2.4.0.tgz"
   integrity sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==
 
-tslib@^2.1.0:
+tslib@^2.1.0, tslib@^2.4.0:
   version "2.6.2"
   resolved "https://registry.npmjs.org/tslib/-/tslib-2.6.2.tgz"
   integrity sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==

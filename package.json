@@ -13,14 +13,14 @@
   "author": "ethstorage",
   "license": "MIT",
   "dependencies": {
-    "colors-cli": "^1.0.28",
+    "colors-cli": "^1.0.33",
     "commander": "^11.1.0",
     "eth-ens-namehash": "^2.0.8",
     "ethers": "^6.7.1",
-    "ethstorage-sdk": "^1.2.2",
+    "ethstorage-sdk": "/Users/lmp/IdeaProjects/ethstorage-sdk",
     "fs": "^0.0.1-security",
     "js-sha3": "^0.8.0",
-    "rxjs": "^7.5.5"
+    "rxjs": "^7.8.1"
   },
   "bin": {
     "ethfs-cli": "cli.js"
