@@ -111,7 +111,7 @@ class Uploader {
     async upload(path, syncPoolSize) {
         // check
         if (this.#uploadType === VERSION_BLOB) {
-            return await this.#ethStorage.upload(path, syncPoolSize);
+            return await this.#ethStorage.upload(path);
         } else if (this.#uploadType === VERSION_CALL_DATA) {
             return await this.uploadFiles(path, syncPoolSize);
         }

@@ -111,8 +111,10 @@ ethers@^6.7.1:
     tslib "2.4.0"
     ws "8.5.0"
 
-ethstorage-sdk@/Users/lmp/IdeaProjects/ethstorage-sdk:
-  version "1.2.4"
+ethstorage-sdk@^1.2.6:
+  version "1.2.6"
+  resolved "https://registry.npmjs.org/ethstorage-sdk/-/ethstorage-sdk-1.2.6.tgz#beadfbc6eeb57a90909447bf655bb7233e1c8d4a"
+  integrity sha512-Crn00yPKlNV/iuaBxVjEeiOH5M9x7W9A4SPMm3WAyE5FDpzgJAWnxfEaCqT7aJuzUS9y8sEd5iB4gLYFmrzIig==
   dependencies:
     async-mutex "^0.5.0"
     axios "^1.6.8"

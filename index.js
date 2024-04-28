@@ -4,7 +4,7 @@ const { EthStorage, Download } = require("ethstorage-sdk");
 const { ethers } = require("ethers");
 const { normalize } = require('eth-ens-namehash');
 const sha3 = require('js-sha3').keccak_256;
-const { Uploader } = require("./upload/Uploader");
+const { Uploader, VERSION_BLOB, VERSION_CALL_DATA} = require("./upload/Uploader");
 
 const color = require('colors-cli/safe')
 const error = color.red.bold;
@@ -100,7 +100,7 @@ const PROVIDER_URLS = {
   [GALILEO_CHAIN_ID]: 'https://galileo.web3q.io:8545',
   [ETHEREUM_CHAIN_ID]: 'https://ethereum.publicnode.com',
   [GOERLI_CHAIN_ID]: 'https://rpc.ankr.com/eth_goerli',
-  [SEPOLIA_CHAIN_ID]: 'https://ethereum-sepolia-rpc.publicnode.com',
+  [SEPOLIA_CHAIN_ID]: 'https://ethereum-sepolia.blockpi.network/v1/rpc/public',
   [OPTIMISTIC_CHAIN_ID]: 'https://mainnet.optimism.io',
   [ARBITRUM_CHAIN_ID]: 'https://arb1.arbitrum.io/rpc',
   [OPTIMISTIC_GOERLI_CHAIN_ID]: 'https://goerli.optimism.io',
@@ -438,6 +438,10 @@ const upload = async (key, domain, path, type, rpc, chainId) => {
   }
   if (!path) {
     console.error(error(`ERROR: invalid file!`));
+    return;
+  }
+  if (type && type !== VERSION_BLOB && type !== VERSION_CALL_DATA) {
+    console.error(error(`ERROR: invalid upload type!`));
     return;
   }
 
