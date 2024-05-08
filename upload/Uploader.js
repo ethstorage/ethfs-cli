@@ -137,7 +137,7 @@ class Uploader {
         const fileSize = size;
         const hexName = ethers.hexlify(ethers.toUtf8Bytes(fileName));
 
-        const fileContract = new ethers.Contract(this.#contractAddress, fileBlobAbi, this.#wallet);
+        let fileContract = new ethers.Contract(this.#contractAddress, fileBlobAbi, this.#wallet);
         const [fileMod, oldChunkLength] = await Promise.all([
             fileContract.getStorageMode(hexName),
             fileContract.countChunks(hexName)
@@ -176,6 +176,7 @@ class Uploader {
         let currentSuccessIndex = -1;
         for (let i = 0; i < chunkLength; i++) {
             try {
+                fileContract = new ethers.Contract(this.#contractAddress, fileBlobAbi, this.#wallet);
                 const chunk = getFileChunk(path, fileSize, i * chunkDataSize, (i + 1) * chunkDataSize);
                 const hexData = '0x' + chunk.toString('hex');
 
@@ -197,10 +198,13 @@ class Uploader {
                     cost = BigInt(Math.floor((chunk.length + 326) / 1024 / 24));
                 }
 
+                const estimatedGas = await fileContract.writeChunk.estimateGas(hexName, i, hexData, {
+                    value: ethers.parseEther(cost.toString())
+                });
                 // upload file
                 const option = {
                     nonce: this.increasingNonce(),
-                    gasLimit: 21000000n,
+                    gasLimit: estimatedGas * BigInt(6) / BigInt(5),
                     value: ethers.parseEther(cost.toString())
                 };
                 const tx = await fileContract.writeChunk(hexName, i, hexData, option);
@@ -216,7 +220,7 @@ class Uploader {
                 }
             } catch (e) {
                 const length = e.message.length;
-                console.log(length > 210 ? (e.message.substring(0, 100) + " ... " + e.message.substring(length - 100, length)) : e.message);
+                console.log(length > 400 ? (e.message.substring(0, 200) + " ... " + e.message.substring(length - 190, length)) : e.message);
                 console.log(error(`ERROR: upload ${fileName} fail!`));
                 break;
             }
