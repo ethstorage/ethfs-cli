@@ -100,7 +100,7 @@ const PROVIDER_URLS = {
   [GALILEO_CHAIN_ID]: 'https://galileo.web3q.io:8545',
   [ETHEREUM_CHAIN_ID]: 'https://ethereum.publicnode.com',
   [GOERLI_CHAIN_ID]: 'https://rpc.ankr.com/eth_goerli',
-  [SEPOLIA_CHAIN_ID]: 'https://rpc.sepolia.org',
+  [SEPOLIA_CHAIN_ID]: 'http://88.99.30.186:8545/',
   [OPTIMISTIC_CHAIN_ID]: 'https://mainnet.optimism.io',
   [ARBITRUM_CHAIN_ID]: 'https://arb1.arbitrum.io/rpc',
   [OPTIMISTIC_GOERLI_CHAIN_ID]: 'https://goerli.optimism.io',
@@ -288,11 +288,22 @@ const checkBalance = async (provider, domainAddr, accountAddr) => {
           console.log(reason);
       });
 }
+
+function isPrivateKey(key) {
+  try {
+    if (typeof(key) === "string" && !key.startsWith("0x")) {
+      key = "0x" + key;
+    }
+    return ethers.isHexString(key, 32);
+  } catch (error) {
+    return false;
+  }
+}
 // **** utils ****
 
 // **** function ****
 const createDirectory = async (key, chainId, rpc) => {
-  if (!ethers.isHexString(key, 32)) {
+  if (!isPrivateKey(key)) {
     console.error(error(`ERROR: invalid private key!`));
     return;
   }
@@ -326,7 +337,7 @@ const createDirectory = async (key, chainId, rpc) => {
 };
 
 const refund = async (key, domain, rpc, chainId) => {
-  if (!ethers.isHexString(key)) {
+  if (!isPrivateKey(key)) {
     console.error(error(`ERROR: invalid private key!`));
     return;
   }
@@ -345,7 +356,7 @@ const refund = async (key, domain, rpc, chainId) => {
 };
 
 const setDefault = async (key, domain, filename, rpc, chainId) => {
-  if (!ethers.isHexString(key)) {
+  if (!isPrivateKey(key)) {
     console.error(error(`ERROR: invalid private key!`));
     return;
   }
@@ -364,7 +375,7 @@ const setDefault = async (key, domain, filename, rpc, chainId) => {
 };
 
 const remove = async (key, domain, fileName, rpc, chainId) => {
-  if (!ethers.isHexString(key)) {
+  if (!isPrivateKey(key)) {
     console.error(error(`ERROR: invalid private key!`));
     return;
   }
@@ -428,7 +439,7 @@ const download = async (domain, fileName, rpc, chainId) => {
 }
 
 const upload = async (key, domain, path, type, rpc, chainId) => {
-  if (!ethers.isHexString(key)) {
+  if (!isPrivateKey(key)) {
     console.error(error(`ERROR: invalid private key!`));
     return;
   }
