@@ -76,27 +76,24 @@ class Uploader {
         this.#ethStorage = new EthStorage(rpc, pk, contractAddress);
     }
 
-    async supportBlob() {
+    async init(uploadType) {
         try {
             const fileContract = new ethers.Contract(this.#contractAddress, fileBlobAbi, this.#wallet);
-            return await fileContract.isSupportBlob();
+            const isSupportBlob = await fileContract.isSupportBlob();
+            if (uploadType) {
+                // check upload type
+                if (!isSupportBlob && uploadType === VERSION_BLOB) {
+                    console.log(`ERROR: The current network does not support this upload type, please switch to another type. Type=${uploadType}`);
+                    return false;
+                }
+                this.#uploadType = uploadType;
+            } else {
+                this.#uploadType = isSupportBlob ? VERSION_BLOB : VERSION_CALL_DATA;
+            }
+            return true;
         } catch (e) {
             return false;
         }
-    }
-
-    async init(uploadType) {
-        const isSupportBlob = await this.supportBlob();
-        // check upload type
-        if (uploadType) {
-            this.#uploadType = uploadType;
-            if (!isSupportBlob && uploadType === VERSION_BLOB) {
-                return false;
-            }
-        } else {
-            this.#uploadType = isSupportBlob ? VERSION_BLOB : VERSION_CALL_DATA;
-        }
-        return true;
     }
 
     async initNonce() {

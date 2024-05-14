@@ -466,9 +466,9 @@ const upload = async (key, domain, path, type, rpc, chainId) => {
     }
 
     const uploader = new Uploader(key, handler.providerUrl, chainId, handler.address);
-    const check = await uploader.init(type);
-    if (!check) {
-      console.log(`ERROR: The current network does not support this upload type, please switch to another type.  Type=${type}`);
+    const status = await uploader.init(type);
+    if (!status) {
+      console.log(`ERROR: Failed to initialize SDK!`);
       return;
     }
     const infoArr = await uploader.upload(path, syncPoolSize);
