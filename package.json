@@ -22,6 +22,9 @@
     "js-sha3": "^0.8.0",
     "rxjs": "^7.8.1"
   },
+  "engines": {
+    "node": ">=17.0.0"
+  },
   "bin": {
     "ethfs-cli": "cli.js"
   }
