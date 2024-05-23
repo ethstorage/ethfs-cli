@@ -198,10 +198,18 @@ class Uploader {
                 const estimatedGas = await fileContract.writeChunk.estimateGas(hexName, i, hexData, {
                     value: ethers.parseEther(cost.toString())
                 });
+
+                // Fetch the current gas price and increase it
+                const currentGasPrice = await this.#wallet.provider.getGasPrice();
+                // Increase by 20%
+                const increasedGasPrice = currentGasPrice * BigInt(12) / BigInt(10); 
+
                 // upload file
                 const option = {
                     nonce: this.increasingNonce(),
                     gasLimit: estimatedGas * BigInt(6) / BigInt(5),
+                    // Set the increased gas price
+                    gasPrice: increasedGasPrice, 
                     value: ethers.parseEther(cost.toString())
                 };
                 const tx = await fileContract.writeChunk(hexName, i, hexData, option);
