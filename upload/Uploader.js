@@ -105,21 +105,21 @@ class Uploader {
         return this.#nonce++;
     }
 
-    async upload(path, syncPoolSize) {
+    async upload(path, syncPoolSize, gasPriceIncreasePercentage = 0) {
         // check
         if (this.#uploadType === VERSION_BLOB) {
             return await this.#ethStorage.upload(path, 1);
         } else if (this.#uploadType === VERSION_CALL_DATA) {
-            return await this.uploadFiles(path, syncPoolSize);
+            return await this.uploadFiles(path, syncPoolSize, gasPriceIncreasePercentage);
         }
     }
 
-    async uploadFiles(path, syncPoolSize) {
+    async uploadFiles(path, syncPoolSize, gasPriceIncreasePercentage = 0) {
         await this.initNonce();
         const results = [];
         return new Promise((resolve) => {
             from(recursiveFiles(path, ''))
-                .pipe(mergeMap(info => this.uploadFile(info), syncPoolSize))
+                .pipe(mergeMap(info => this.uploadFile(info, gasPriceIncreasePercentage), syncPoolSize))
                 .subscribe({
                     next: (info) => { results.push(info); },
                     error: (error) => { throw error },
@@ -128,7 +128,7 @@ class Uploader {
         });
     }
 
-    async uploadFile(fileInfo) {
+    async uploadFile(fileInfo, gasPriceIncreasePercentage = 0) {
         const {path, name, size} = fileInfo;
         const fileName = name;
         const fileSize = size;
@@ -198,10 +198,21 @@ class Uploader {
                 const estimatedGas = await fileContract.writeChunk.estimateGas(hexName, i, hexData, {
                     value: ethers.parseEther(cost.toString())
                 });
+
+                // Fetch the current gas price and increase it
+                const currentGasPrice = await this.#wallet.provider.getGasPrice();
+                // Increase % if user requests it
+                let increasedGasPrice = currentGasPrice;
+                if (gasPriceIncreasePercentage !== 0){
+                    increasedGasPrice = currentGasPrice * BigInt(100 + gasPriceIncreasePercentage) / BigInt(100);
+                }
+
                 // upload file
                 const option = {
                     nonce: this.increasingNonce(),
                     gasLimit: estimatedGas * BigInt(6) / BigInt(5),
+                    // Set the increased gas price
+                    gasPrice: increasedGasPrice, 
                     value: ethers.parseEther(cost.toString())
                 };
                 const tx = await fileContract.writeChunk(hexName, i, hexData, option);
