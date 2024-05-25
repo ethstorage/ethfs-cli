@@ -438,7 +438,7 @@ const download = async (domain, fileName, rpc, chainId) => {
   }
 }
 
-const upload = async (key, domain, path, type, rpc, chainId) => {
+const upload = async (key, domain, path, type, rpc, chainId, gasPricePercentage = 0) => {
   if (!isPrivateKey(key)) {
     console.error(error(`ERROR: invalid private key!`));
     return;
@@ -455,6 +455,11 @@ const upload = async (key, domain, path, type, rpc, chainId) => {
     console.error(error(`ERROR: invalid upload type!`));
     return;
   }
+  if (isNaN(gasPricePercentage)) {
+    console.error(error(`ERROR: invalid gas price percentage!`));
+    return;
+  }
+  gasPricePercentage = parseInt(gasPricePercentage) || 0;
 
   // {providerUrl, chainId, address}
   const handler = await getWebHandler(domain, rpc, chainId);
@@ -471,7 +476,7 @@ const upload = async (key, domain, path, type, rpc, chainId) => {
       console.log(`ERROR: Failed to initialize SDK!`);
       return;
     }
-    const infoArr = await uploader.upload(path, syncPoolSize);
+    const infoArr = await uploader.upload(path, syncPoolSize, gasPricePercentage);
 
     console.log();
     let totalCost = 0n, totalChunkCount = 0, totalFileSize = 0;
