@@ -10,7 +10,8 @@ program
     .option('-r, --rpc [rpc]', 'provider url')
     .option('-f, --file [file]', 'upload file path/name')
     .option('-c, --chainId [chainId]', 'chain id')
-    .option('-t, --type [type]', 'uploader type');
+    .option('-t, --type [type]', 'uploader type')
+    .option('-g, --gasPriceIncreasePercentage [gasPriceIncreasePercentage]', 'gas price increase percentage');
 
 program
     .command('create')
@@ -82,9 +83,10 @@ program
     .option('-t, --type [type]', 'uploader type')
     .option('-c, --chainId [chainId]', 'chain id')
     .option('-r, --rpc [rpc]', 'provider url')
+    .option('-g, --gasPriceIncreasePercentage [gasPriceIncreasePercentage]', 'gas price increase percentage')
     .action(() => {
         const opts = program.opts();
-        upload(opts.privateKey, opts.address, opts.file, opts.type, opts.rpc,  opts.chainId);
+        upload(opts.privateKey, opts.address, opts.file, opts.type, opts.rpc,  opts.chainId, opts.gasPriceIncreasePercentage);
     });
 
 program.parse(process.argv);
