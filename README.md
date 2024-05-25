@@ -15,15 +15,15 @@ npx ethfs-cli upload -f <directory|file> -a <address> -p <private-key> -r [rpc] 
 <br/>
 
 ## Command
-| Short Name | Full Name                   | description                                |   
-|------------|-----------------------------|--------------------------------------------|
-| -p         | --privateKey                | private key                                |
-| -a         | --address                   | contract address / domain name             |
-| -f         | --file                      | upload file path / name                    |
-| -c         | --chainId                   | chain id                                   |
-| -r         | --rpc                       | provider url                               |
-| -t         | --type                      | file save type<br/>on chain: 1<br/>blob: 2 |
-| -g	       |--gasPriceIncreasePercentage | gas price increase percentage              |
+| Short Name | Full Name                    | description                                |   
+|------------|------------------------------|--------------------------------------------|
+| -p         | --privateKey                 | private key                                |
+| -a         | --address                    | contract address / domain name             |
+| -f         | --file                       | upload file path / name                    |
+| -c         | --chainId                    | chain id                                   |
+| -r         | --rpc                        | provider url                               |
+| -t         | --type                       | file save type<br/>on chain: 1<br/>blob: 2 |
+| -g         | --gasPriceIncreasePercentage | gas price increase percentage              |
  <br/>
 
 ## Supported networks
