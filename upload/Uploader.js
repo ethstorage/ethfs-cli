@@ -200,7 +200,7 @@ class Uploader {
                 });
 
                 // Fetch the current gas price and increase it
-                const currentGasPrice = await this.#wallet.provider.getGasPrice();
+                const currentGasPrice = await this.#wallet.getGasPrice();
                 // Increase % if user requests it
                 let increasedGasPrice = currentGasPrice;
                 if (gasPriceIncreasePercentage !== 0){
