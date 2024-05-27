@@ -199,22 +199,22 @@ class Uploader {
                     value: ethers.parseEther(cost.toString())
                 });
 
-                // Fetch the current gas price and increase it
-                const currentGasPrice = await this.#wallet.provider.getGasPrice();
-                // Increase % if user requests it
-                let increasedGasPrice = currentGasPrice;
-                if (gasPriceIncreasePercentage !== 0){
-                    increasedGasPrice = currentGasPrice * BigInt(100 + gasPriceIncreasePercentage) / BigInt(100);
-                }
-
                 // upload file
                 const option = {
                     nonce: this.increasingNonce(),
                     gasLimit: estimatedGas * BigInt(6) / BigInt(5),
-                    // Set the increased gas price
-                    gasPrice: increasedGasPrice, 
                     value: ethers.parseEther(cost.toString())
                 };
+
+                // Increase % if user requests it
+                if (gasPriceIncreasePercentage !== 0) {
+                    // Fetch the current gas price and increase it
+                    const feeData = await this.#wallet.provider.getFeeData();
+                    // Set the increased gas price
+                    option.maxFeePerGas = feeData.maxFeePerGas * BigInt(100 + gasPriceIncreasePercentage) / BigInt(100);
+                    option.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas * BigInt(100 + gasPriceIncreasePercentage) / BigInt(100);
+                }
+
                 const tx = await fileContract.writeChunk(hexName, i, hexData, option);
                 console.log(`Send Success: File: ${fileName}, Chunk Id: ${i}, Transaction hash: ${tx.hash}`);
                 // get result
