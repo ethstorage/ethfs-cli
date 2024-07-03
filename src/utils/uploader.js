@@ -3,6 +3,7 @@ const sha3 = require('js-sha3').keccak_256;
 const {ethers} = require("ethers");
 const {EthStorage} = require("ethstorage-sdk");
 const {from, mergeMap} = require('rxjs');
+const {GALILEO_CHAIN_ID, VERSION_CALL_DATA, VERSION_BLOB} = require('../params/constants');
 
 const color = require("colors-cli/safe");
 const error = color.red.bold;
@@ -16,15 +17,9 @@ const fileBlobAbi = [
     "function getStorageMode(bytes memory name) public view returns(uint256)"
 ];
 
-const GALILEO_CHAIN_ID = 3334;
-
-
 const REMOVE_FAIL = -1;
 const REMOVE_NORMAL = 0;
 const REMOVE_SUCCESS = 1;
-
-const VERSION_CALL_DATA = '1';
-const VERSION_BLOB = '2';
 
 const getFileChunk = (path, fileSize, start, end) => {
     end = end > fileSize ? fileSize : end;
@@ -76,7 +71,11 @@ class Uploader {
         this.#ethStorage = new EthStorage(rpc, pk, contractAddress);
     }
 
-    async init(uploadType) {
+    setUploadType(uploadType) {
+        this.#uploadType = uploadType;
+    }
+
+    async supportBlob() {
         try {
             const fileContract = new ethers.Contract(this.#contractAddress, fileBlobAbi, this.#wallet);
             const isSupportBlob = await fileContract.isSupportBlob();
@@ -117,12 +116,12 @@ class Uploader {
     async uploadFiles(path, syncPoolSize, gasPriceIncreasePercentage = 0) {
         await this.initNonce();
         const results = [];
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             from(recursiveFiles(path, ''))
                 .pipe(mergeMap(info => this.uploadFile(info, gasPriceIncreasePercentage), syncPoolSize))
                 .subscribe({
                     next: (info) => { results.push(info); },
-                    error: (error) => { throw error },
+                    error: (error) => { reject(error); },
                     complete: () => { resolve(results); }
                 });
         });
@@ -274,10 +273,134 @@ class Uploader {
         console.log(error(`ERROR: Failed to remove file: ${fileName}`));
         return REMOVE_FAIL;
     }
+
+    async estimateCost(path) {
+        if (this.#uploadType === VERSION_BLOB) {
+            return await this.#ethStorage.estimateFiles(path);
+        } else if (this.#uploadType === VERSION_CALL_DATA) {
+            return await this.estimateFiles(path);
+        }
+    }
+
+    async estimateFiles(path) {
+        let totalFileCount = 0;
+        let totalTxCount = 0;
+        let totalCost = 0n;
+        let totalGasCost = 0n;
+        let totalBlobGasCost = 0n;
+
+        const gasFeeData = await this.#wallet.provider.getFeeData();
+        return new Promise((resolve, reject) => {
+            from(recursiveFiles(path, ''))
+                .pipe(mergeMap(info => this.estimateFile(info, gasFeeData.gasPrice), 15))
+                .subscribe({
+                    next: (info) => {
+                        totalFileCount++;
+                        totalTxCount += info.totalTxCount;
+                        totalCost += info.totalCost;
+                        totalGasCost += info.totalGasCost;
+                    },
+                    error: (error) => { reject(error) },
+                    complete: () => {
+                        resolve({
+                            totalFileCount,
+                            totalTxCount,
+                            totalCost,
+                            totalGasCost,
+                            totalBlobGasCost,
+                        });
+                    }
+                });
+        });
+    }
+
+    async estimateFile(fileInfo, gasPrice) {
+        let totalTxCount = 0;
+        let totalCost = 0n;
+        let totalGasCost = 0n;
+
+        const {path, name, size} = fileInfo;
+        const fileName = name;
+        const fileSize = size;
+        const hexName = ethers.hexlify(ethers.toUtf8Bytes(fileName));
+
+        let fileContract = new ethers.Contract(this.#contractAddress, fileBlobAbi, this.#wallet);
+        const fileMod = await fileContract.getStorageMode(hexName);
+        if (fileMod !== BigInt(VERSION_CALL_DATA) && fileMod !== 0n) {
+            return {
+                totalTxCount: totalTxCount,
+                totalCost: totalCost,
+                totalGasCost: totalGasCost
+            }
+        }
+
+        let chunkDataSize = fileSize;
+        let chunkLength = 1;
+        let MAX_GAS_LIMIT = 0;
+        if (GALILEO_CHAIN_ID === this.#chainId) {
+            if (fileSize > 475 * 1024) {
+                // Data need to be sliced if file > 475K
+                chunkDataSize = 475 * 1024;
+                chunkLength = Math.ceil(fileSize / (475 * 1024));
+            }
+        } else {
+            MAX_GAS_LIMIT = 5630000n;
+            if (fileSize > 24 * 1024 - 326) {
+                // Data need to be sliced if file > 24K
+                chunkDataSize = 24 * 1024 - 326;
+                chunkLength = Math.ceil(fileSize / (24 * 1024 - 326));
+            }
+        }
+
+        for (let i = 0; i < chunkLength; i++) {
+            fileContract = new ethers.Contract(this.#contractAddress, fileBlobAbi, this.#wallet);
+            const chunk = getFileChunk(path, fileSize, i * chunkDataSize, (i + 1) * chunkDataSize);
+
+            // check is change
+            const localHash = '0x' + sha3(chunk);
+            const hash = await fileContract.getChunkHash(hexName, i);
+            if (localHash === hash) {
+                continue;
+            }
+
+            // get cost
+            const hexData = '0x' + chunk.toString('hex');
+            let cost = 0n;
+            let gasLimit = 0;
+            if (GALILEO_CHAIN_ID === this.#chainId) {
+                if (chunk.length > (24 * 1024 - 326)) {
+                    // eth storage need stake
+                    cost = BigInt(Math.floor((chunk.length + 326) / 1024 / 24));
+                }
+                if (chunk.length === 475 * 1024) {
+                    gasLimit = MAX_GAS_LIMIT;
+                } else {
+                    // must set chunk 0
+                    gasLimit = await fileContract.writeChunk.estimateGas(hexName, 0, hexData, {
+                        value: ethers.parseEther(cost.toString())
+                    });
+                }
+            } else {
+                if (chunk.length === 24 * 1024 - 326) {
+                    gasLimit = MAX_GAS_LIMIT;
+                } else {
+                    gasLimit = await fileContract.writeChunk.estimateGas(hexName, 0, hexData); // must set chunk 0
+                }
+            }
+
+            totalTxCount++;
+            totalCost += cost;
+            totalGasCost += gasPrice * gasLimit;
+        }
+
+        return {
+            totalTxCount: totalTxCount,
+            totalCost: totalCost,
+            totalGasCost: totalGasCost
+        }
+    }
 }
 
 module.exports = {
-    Uploader,
-    VERSION_CALL_DATA,
-    VERSION_BLOB
+    Uploader
 }
