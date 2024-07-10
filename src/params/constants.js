@@ -1,13 +1,4 @@
-
-const nsAbi = [
-    "function pointerOf(bytes memory name) public view returns (address)",
-    "function resolver(bytes32 node) public view returns (address)",
-];
-const resolverAbi = [
-    "function webHandler(bytes32 node) external view returns (address)",
-    "function text(bytes32 node, string calldata key) external view returns (string memory)"
-];
-
+// short name
 const SHORT_NAME_GALILEO = "w3q-g";
 const SHORT_NAME_ETHEREUM = "eth";
 const SHORT_NAME_GOERLI = "gor";
@@ -33,6 +24,8 @@ const SHORT_NAME_POLYGON_ZKEVM_TEST = "zkevmtest";
 const SHORT_NAME_QUARKCHAIN = "qkc-s0";
 const SHORT_NAME_QUARKCHAIN_DEVNET = "qkc-d-s0";
 
+
+// chain id
 const GALILEO_CHAIN_ID = 3334;
 const ETHEREUM_CHAIN_ID = 1;
 const GOERLI_CHAIN_ID = 5;
@@ -57,6 +50,7 @@ const POLYGON_MUMBAI_CHAIN_ID = 80001;
 const POLYGON_ZKEVM_TEST_CHAIN_ID = 1402;
 const QUARKCHAIN_CHAIN_ID = 100001;
 const QUARKCHAIN_DEVNET_CHAIN_ID = 110001;
+const QUARKCHAIN_L2_CHAIN_ID = 42069;
 
 const NETWORK_MAPPING = {
     [SHORT_NAME_GALILEO]: GALILEO_CHAIN_ID,
@@ -110,6 +104,7 @@ const PROVIDER_URLS = {
     [POLYGON_ZKEVM_TEST_CHAIN_ID]: 'https://rpc.public.zkevm-test.net',
     [QUARKCHAIN_CHAIN_ID]: 'https://mainnet-s0-ethapi.quarkchain.io',
     [QUARKCHAIN_DEVNET_CHAIN_ID]: 'https://devnet-s0-ethapi.quarkchain.io',
+    [QUARKCHAIN_L2_CHAIN_ID]: 'http://142.132.154.16:8545',
 }
 
 const NS_ADDRESS = {
@@ -121,17 +116,17 @@ const NS_ADDRESS = {
 // eip-4844
 const ETH_STORAGE_ADDRESS = {
     [SEPOLIA_CHAIN_ID]: '0x804C520d3c084C805E37A35E90057Ac32831F96f',
+    [QUARKCHAIN_L2_CHAIN_ID]: '0x90a708C0dca081ca48a9851a8A326775155f87Fd',
 }
 const ETH_STORAGE_RPC = {
     [SEPOLIA_CHAIN_ID]: 'http://65.108.236.27:9540',
+    [QUARKCHAIN_L2_CHAIN_ID]: 'http://65.108.230.142:9545',
 }
 
 const VERSION_CALL_DATA = '1';
 const VERSION_BLOB = '2';
 
 module.exports = {
-    nsAbi,
-    resolverAbi,
     NETWORK_MAPPING,
     PROVIDER_URLS,
     NS_ADDRESS,

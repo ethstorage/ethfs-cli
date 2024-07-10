@@ -2,8 +2,7 @@
 const { program } = require('commander');
 program.version(require('./package.json').version);
 
-const { create, refund, remove, setDefault, download } = require("./index");
-const { uploadEvent } =  require("./src/events");
+const { create, refund, upload, remove, setDefault, download } = require("./src");
 
 program
     .option('-p, --privateKey [privateKey]', 'private key')
@@ -87,7 +86,7 @@ program
     .option('-g, --gasPriceIncreasePercentage [gasPriceIncreasePercentage]', 'gas price increase percentage')
     .action(() => {
         const opts = program.opts();
-        uploadEvent(opts.privateKey, opts.address, opts.file, opts.type, opts.rpc, opts.chainId, opts.gasPriceIncreasePercentage);
+        upload(opts.privateKey, opts.address, opts.file, opts.type, opts.rpc, opts.chainId, opts.gasPriceIncreasePercentage);
     });
 
 program.parse(process.argv);

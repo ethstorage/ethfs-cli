@@ -1,21 +1,25 @@
 const fs = require('fs');
 const path = require('path');
-const { EthStorage, Download } = require("ethstorage-sdk");
+const ora = require("ora");
+const { confirm } = require("@inquirer/prompts");
+const { FlatDirectory } = require("ethstorage-sdk");
 const { ethers } = require("ethers");
 const {
   PROVIDER_URLS,
-  ETH_STORAGE_ADDRESS,
   ETH_STORAGE_RPC,
   ARBITRUM_NOVE_CHAIN_ID,
-  ETHEREUM_CHAIN_ID
-} = require('./src/params/constants');
-const { Uploader } = require("./src/utils/uploader");
+  ETHEREUM_CHAIN_ID,
+  VERSION_BLOB,
+  VERSION_CALL_DATA,
+  FlatDirectoryAbi
+} = require('./params');
 const {
   isPrivateKey,
   checkBalance,
   getChainIdByRpc,
   getWebHandler,
-} = require('./src/utils/utils');
+  Uploader
+} = require('./utils');
 
 const color = require('colors-cli/safe')
 const error = color.red.bold;
@@ -45,7 +49,7 @@ const createDirectory = async (key, chainId, rpc) => {
   }
 
   // get rpc
-  const providerUrl = rpc ?? PROVIDER_URLS[chainId];
+  const providerUrl = rpc || PROVIDER_URLS[chainId];
   if (!providerUrl) {
     console.error(error(`ERROR: The network need RPC, please try again after setting RPC!`));
     return;
@@ -53,9 +57,11 @@ const createDirectory = async (key, chainId, rpc) => {
 
   console.log("chainId =", chainId);
   console.log("providerUrl =", providerUrl);
-  const ethStorage = new EthStorage(providerUrl, key);
-  const ethStorageAdd = ETH_STORAGE_ADDRESS[chainId];
-  await ethStorage.deploy(ethStorageAdd);
+  const fd = await FlatDirectory.create({
+    rpc: providerUrl,
+    privateKey: key,
+  });
+  await fd.deploy();
 };
 
 const refund = async (key, domain, rpc, chainId) => {
@@ -70,8 +76,19 @@ const refund = async (key, domain, rpc, chainId) => {
 
   const {providerUrl, address} = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
   if (providerUrl && parseInt(address) > 0) {
-    const ethStorage = new EthStorage(providerUrl, key, address);
-    await ethStorage.refund();
+    const provider = new ethers.JsonRpcProvider(providerUrl);
+    const wallet = new ethers.Wallet(key, provider);
+    const fileContract = new ethers.Contract(address, FlatDirectoryAbi, wallet);
+    try {
+      const tx = await fileContract.refund();
+      console.log(`FlatDirectory: Tx hash is ${tx.hash}`);
+      const txReceipt = await tx.wait();
+      if (txReceipt.status) {
+        console.log(`Refund success!`);
+      }
+    } catch (e) {
+      console.error(`ERROR: Refund failed!`, e.message);
+    }
   } else {
     console.log(error(`ERROR: ${domain} domain doesn't exist`));
   }
@@ -89,8 +106,15 @@ const setDefault = async (key, domain, filename, rpc, chainId) => {
 
   const {providerUrl, address} = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
   if (providerUrl && parseInt(address) > 0) {
-    const ethStorage = new EthStorage(providerUrl, key, address);
-    await ethStorage.setDefault(filename);
+    const fd = await FlatDirectory.create({
+      rpc: providerUrl,
+      privateKey: key,
+      address: address
+    });
+    const status = await fd.setDefault(filename);
+    if (status) {
+      console.log(`Set default success!`);
+    }
   } else {
     console.log(error(`ERROR: ${domain} domain doesn't exist`));
   }
@@ -115,17 +139,20 @@ const remove = async (key, domain, fileName, rpc, chainId) => {
     console.log(`Removing file ${fileName}`);
     const provider = new ethers.JsonRpcProvider(providerUrl);
     const wallet = new ethers.Wallet(key, provider);
-    let prevInfo;
-    await checkBalance(provider, address, wallet.address).then(info => {
-      prevInfo = info;
-    })
+    const prevInfo = await checkBalance(provider, address, wallet.address);
 
-    const ethStorage = new EthStorage(providerUrl, key, address);
-    await ethStorage.remove(fileName);
+    const fd = await FlatDirectory.create({
+      rpc: providerUrl,
+      privateKey: key,
+      address: address
+    });
+    const status = await fd.remove(fileName);
+    if (status) {
+      console.log(`Remove success!`);
+    }
 
-    await checkBalance(provider, address, wallet.address).then(info => {
-      console.log(`domainBalance: ${info.domainBalance}, accountBalance: ${info.accountBalance}, balanceChange: ${prevInfo.accountBalance - info.accountBalance}`);
-    })
+    const info = await checkBalance(provider, address, wallet.address);
+    console.log(`domainBalance: ${info.domainBalance}, accountBalance: ${info.accountBalance}, balanceChange: ${prevInfo.accountBalance - info.accountBalance}`);
   }
 }
 
@@ -143,8 +170,15 @@ const download = async (domain, fileName, rpc, chainId) => {
   if (parseInt(handler.address) > 0) {
     // replace rpc to eth storage
     const esRpc = ETH_STORAGE_RPC[handler.chainId];
-    rpc = esRpc ?? handler.providerUrl;
-    const buf = await Download(rpc, handler.address, fileName);
+    // TODO
+    const ethStorageRpc = esRpc || handler.providerUrl;
+    const fd = await FlatDirectory.create({
+      rpc: handler.providerUrl,
+      ethStorageRpc: ethStorageRpc,
+      privateKey: ethers.hexlify(ethers.randomBytes(32)),
+      address: handler.address,
+    });
+    const buf = await fd.download(fileName);
     if (buf.length > 0) {
       const savePath = path.join(process.cwd(), fileName);
       if (!fs.existsSync(path.dirname(savePath))) {
@@ -160,16 +194,63 @@ const download = async (domain, fileName, rpc, chainId) => {
   }
 }
 
-const upload = async (handler, key, domain, path, type, rpc, chainId) => {
-  chainId = handler.chainId;
+const uploadEvent = async (key, domain, path, type, rpc, chainId, gasPriceIncreasePercentage) => {
+  if (!isPrivateKey(key)) {
+    console.error(error(`ERROR: invalid private key!`));
+    return;
+  }
+  if (!domain) {
+    console.error(error(`ERROR: invalid address!`));
+    return;
+  }
+  if (!path) {
+    console.error(error(`ERROR: invalid file!`));
+    return;
+  }
+  if (type && type !== VERSION_BLOB && type !== VERSION_CALL_DATA) {
+    console.error(error(`ERROR: invalid upload type!`));
+    return;
+  }
+
+  const handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
+  if (!handler.providerUrl || parseInt(handler.address) <= 0) {
+    console.log(error(`ERROR: ${domain} domain doesn't exist`));
+    return;
+  }
+
+  // query total cost
+  const uploader = await Uploader.create(key, handler.providerUrl, chainId, handler.address);
+  if (!uploader) {
+    console.log(error(`ERROR: Failed to initialize the SDK, please check the parameters and network and try again.  Type=${type}`));
+    return;
+  }
+
+  ora('Start estimating cost').start();
+  try {
+    const cost = await uploader.estimateCost(path, gasPriceIncreasePercentage);
+    console.log();
+    console.log(`Info: The number of files is ${error(cost.totalFileCount)}.`);
+    console.log(`Info: Storage cost is expected to be ${error(ethers.formatEther(cost.totalStorageCost))} ETH."`);
+    console.log(`Info: Gas cost is expected to be ${error(ethers.formatEther(cost.totalGasCost))} ETH.`);
+    console.log(`Info: The total cost is ${error(ethers.formatEther(cost.totalStorageCost + cost.totalGasCost))} ETH."`);
+  } catch (e) {
+    const length = e.message.length;
+    console.log(length > 400 ? (e.message.substring(0, 200) + " ... " + e.message.substring(length - 190, length)) : e.message);
+    console.log(error("Estimate is fail"));
+  }
+
+  const answer = await confirm({message: `Continue?`});
+  if (answer) {
+    await upload(uploader, chainId, path, gasPriceIncreasePercentage);
+  }
+}
+
+const upload = async (uploader, chainId, path, gasPriceIncreasePercentage) => {
   let syncPoolSize = 15;
   if (chainId === ARBITRUM_NOVE_CHAIN_ID) {
     syncPoolSize = 4;
   }
-
-  const uploader = new Uploader(key, handler.providerUrl, chainId, handler.address);
-  uploader.setUploadType(type);
-  const infoArr = await uploader.upload(path, syncPoolSize);
+  const infoArr = await uploader.upload(path, syncPoolSize, gasPriceIncreasePercentage);
 
   console.log();
   let totalCost = 0n, totalChunkCount = 0, totalFileSize = 0;
@@ -193,7 +274,7 @@ const upload = async (handler, key, domain, path, type, rpc, chainId) => {
 };
 // **** function ****
 
-module.exports.upload = upload;
+module.exports.upload = uploadEvent;
 module.exports.create = createDirectory;
 module.exports.refund = refund;
 module.exports.remove = remove;
