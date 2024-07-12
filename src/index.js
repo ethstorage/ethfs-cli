@@ -219,30 +219,36 @@ const uploadEvent = async (key, domain, path, type, rpc, chainId, gasPriceIncrea
   }
 
   // query total cost
-  const uploader = await Uploader.create(key, handler.providerUrl, chainId, handler.address);
+  const uploader = await Uploader.create(key, handler.providerUrl, handler.chainId, handler.address, type);
   if (!uploader) {
-    console.log(error(`ERROR: Failed to initialize the SDK, please check the parameters and network and try again.  Type=${type}`));
+    console.log(error(`ERROR: Failed to initialize the SDK, please check the parameters and network and try again.`));
     return;
   }
 
-  ora('Start estimating cost').start();
+  const spin = ora('Start estimating cost').start();
   try {
     const cost = await uploader.estimateCost(path, gasPriceIncreasePercentage);
     console.log();
-    console.log(`Info: The number of files is ${error(cost.totalFileCount)}.`);
-    console.log(`Info: Storage cost is expected to be ${error(ethers.formatEther(cost.totalStorageCost))} ETH."`);
-    console.log(`Info: Gas cost is expected to be ${error(ethers.formatEther(cost.totalGasCost))} ETH.`);
-    console.log(`Info: The total cost is ${error(ethers.formatEther(cost.totalStorageCost + cost.totalGasCost))} ETH."`);
+    console.log(`Info: The number of files is ${error(cost.totalFileCount.toString())}`);
+    console.log(`Info: Storage cost is expected to be ${error(ethers.formatEther(cost.totalStorageCost))} ETH`);
+    console.log(`Info: Gas cost is expected to be ${error(ethers.formatEther(cost.totalGasCost))} ETH`);
+    console.log(`Info: The total cost is ${error(ethers.formatEther(cost.totalStorageCost + cost.totalGasCost))} ETH`);
   } catch (e) {
+    console.log();
     const length = e.message.length;
-    console.log(length > 400 ? (e.message.substring(0, 200) + " ... " + e.message.substring(length - 190, length)) : e.message);
-    console.log(error("Estimate is fail"));
+    console.log(error(length > 400 ? (e.message.substring(0, 200) + " ... " + e.message.substring(length - 190, length)) : e.message));
+    console.log(error(`Estimate gas failed, the failure file is ${e.value}`));
+  } finally {
+    spin.stop();
   }
 
-  const answer = await confirm({message: `Continue?`});
-  if (answer) {
-    await upload(uploader, chainId, path, gasPriceIncreasePercentage);
-  }
+  console.log();
+  try {
+    const answer = await confirm({message: `Continue?`});
+    if (answer) {
+      await upload(uploader, chainId, path, gasPriceIncreasePercentage);
+    }
+  } catch (e) {}
 }
 
 const upload = async (uploader, chainId, path, gasPriceIncreasePercentage) => {
@@ -253,12 +259,12 @@ const upload = async (uploader, chainId, path, gasPriceIncreasePercentage) => {
   const infoArr = await uploader.upload(path, syncPoolSize, gasPriceIncreasePercentage);
 
   console.log();
-  let totalCost = 0n, totalChunkCount = 0, totalFileSize = 0;
+  let totalStorageCost = 0n, totalChunkCount = 0, totalDataSize = 0;
   for (const file of infoArr) {
-    if (file.status) {
-      totalCost += file.totalCost;
+    if (file.currentSuccessIndex >= 0) {
+      totalStorageCost += file.totalStorageCost;
       totalChunkCount += file.totalUploadCount;
-      totalFileSize += file.totalUploadSize;
+      totalDataSize += file.totalUploadSize;
       if (file.totalChunkCount > file.currentSuccessIndex + 1) {
         console.log(error(`ERROR: ${file.fileName} uploaded failed. The chunkId is ${file.currentSuccessIndex + 1}`));
       }
@@ -267,10 +273,10 @@ const upload = async (uploader, chainId, path, gasPriceIncreasePercentage) => {
     }
   }
 
-  console.log();
+  console.log(notice(`Total File Count: ${infoArr.length}`));
   console.log(notice(`Total Upload Chunk Count: ${totalChunkCount}`));
-  console.log(notice(`Total Upload File Size: ${totalFileSize} KB`));
-  console.log(notice(`Total Cost: ${ethers.formatEther(totalCost)} ETH`));
+  console.log(notice(`Total Upload Data Size: ${totalDataSize} KB`));
+  console.log(notice(`Total Storage Cost: ${ethers.formatEther(totalStorageCost)} ETH`));
 };
 // **** function ****
 
