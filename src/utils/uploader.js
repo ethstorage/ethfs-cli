@@ -88,33 +88,42 @@ class Uploader {
     }
 
     // estimate cost
-    async estimateCost(path, gasPriceIncreasePercentage) {
+    async estimateCost(path, syncPoolSize, gasPriceIncreasePercentage) {
         let totalFileCount = 0;
         let totalStorageCost = 0n;
         let totalGasCost = 0n;
 
         const gasFeeData = await this.#wallet.provider.getFeeData();
-        const fileInfos = recursiveFiles(path, '');
-        for(const info of fileInfos) {
-            try {
-                const cost = await this.#estimate(info, gasFeeData, gasPriceIncreasePercentage);
-                totalFileCount++;
-                totalStorageCost += cost.totalStorageCost;
-                totalGasCost += cost.totalGasCost;
-            } catch (e) {
-                throw new UploadError(e.message, info.name);
-            }
-        }
-        return {
-            totalFileCount, totalStorageCost, totalGasCost,
-        }
+        return new Promise((resolve, reject) => {
+            from(recursiveFiles(path, ''))
+                .pipe(mergeMap(info => this.#estimate(info, gasFeeData, gasPriceIncreasePercentage), syncPoolSize))
+                .subscribe({
+                    next: (cost) => {
+                        totalFileCount++;
+                        totalStorageCost += cost.totalStorageCost;
+                        totalGasCost += cost.totalGasCost;
+                    },
+                    error: (error) => { reject(error) },
+                    complete: () => {
+                        resolve({
+                            totalFileCount,
+                            totalStorageCost,
+                            totalGasCost,
+                        });
+                    }
+                });
+        });
     }
 
     async #estimate(info, gasFeeData, gasPriceIncreasePercentage) {
-        if (this.#uploadType === VERSION_BLOB) {
-            return await this.#estimateFileByBlob(info);
-        } else if (this.#uploadType === VERSION_CALL_DATA) {
-            return await this.#estimateFileByCallData(info, gasFeeData, gasPriceIncreasePercentage);
+        try {
+            if (this.#uploadType === VERSION_BLOB) {
+                return await this.#estimateFileByBlob(info);
+            } else if (this.#uploadType === VERSION_CALL_DATA) {
+                return await this.#estimateFileByCallData(info, gasFeeData, gasPriceIncreasePercentage);
+            }
+        } catch (e) {
+            throw new UploadError(e.message, info.name);
         }
     }
 
@@ -226,9 +235,9 @@ class Uploader {
         await this.#flatDirectory.uploadFile(name, file, {
             onProgress: (progress, count, isChange) => {
                 if (isChange) {
-                    console.log(`FlatDirectory: The [${currentSuccessIndex + 1} - ${progress}] chunks have been uploaded`, '', name);
+                    console.log(`FlatDirectory: The [${currentSuccessIndex + 1}-${progress}] chunks have been uploaded`, '', name);
                 } else {
-                    console.log(`FlatDirectory: The [${currentSuccessIndex + 1} - ${progress}] chunks is not changed`, '', name);
+                    console.log(`FlatDirectory: The [${currentSuccessIndex + 1}-${progress}] chunks is not changed`, '', name);
                 }
                 currentSuccessIndex = progress;
                 totalChunkCount = count;
@@ -267,7 +276,7 @@ class Uploader {
         const fileContract = new ethers.Contract(this.#contractAddress, FlatDirectoryAbi, this.#wallet);
         const fileMod = await fileContract.getStorageMode(hexName);
         if (fileMod !== BigInt(VERSION_CALL_DATA) && fileMod !== 0n) {
-            console.log(`FlatDirectory: This file does not support calldata upload!`, '', name);
+            console.log(error(`FlatDirectory: This file does not support calldata upload!`), '', name);
             return {
                 fileName: name,
                 totalChunkCount: 0,

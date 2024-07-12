@@ -170,7 +170,6 @@ const download = async (domain, fileName, rpc, chainId) => {
   if (parseInt(handler.address) > 0) {
     // replace rpc to eth storage
     const esRpc = ETH_STORAGE_RPC[handler.chainId];
-    // TODO
     const ethStorageRpc = esRpc || handler.providerUrl;
     const fd = await FlatDirectory.create({
       rpc: handler.providerUrl,
@@ -178,7 +177,7 @@ const download = async (domain, fileName, rpc, chainId) => {
       privateKey: ethers.hexlify(ethers.randomBytes(32)),
       address: handler.address,
     });
-    const buf = await fd.download(fileName);
+    const buf = await fd.fetchData(fileName);
     if (buf.length > 0) {
       const savePath = path.join(process.cwd(), fileName);
       if (!fs.existsSync(path.dirname(savePath))) {
@@ -225,9 +224,15 @@ const uploadEvent = async (key, domain, path, type, rpc, chainId, gasPriceIncrea
     return;
   }
 
+  let syncPoolSize = 15;
+  if (handler.chainId === ARBITRUM_NOVE_CHAIN_ID) {
+    syncPoolSize = 4;
+  }
+
+  // get cost
   const spin = ora('Start estimating cost').start();
   try {
-    const cost = await uploader.estimateCost(path, gasPriceIncreasePercentage);
+    const cost = await uploader.estimateCost(path, syncPoolSize, gasPriceIncreasePercentage);
     console.log();
     console.log(`Info: The number of files is ${error(cost.totalFileCount.toString())}`);
     console.log(`Info: Storage cost is expected to be ${error(ethers.formatEther(cost.totalStorageCost))} ETH`);
@@ -236,28 +241,25 @@ const uploadEvent = async (key, domain, path, type, rpc, chainId, gasPriceIncrea
   } catch (e) {
     console.log();
     const length = e.message.length;
-    console.log(error(length > 400 ? (e.message.substring(0, 200) + " ... " + e.message.substring(length - 190, length)) : e.message));
+    console.log(length > 400 ? (e.message.substring(0, 200) + " ... " + e.message.substring(length - 190, length)) : e.message);
     console.log(error(`Estimate gas failed, the failure file is ${e.value}`));
   } finally {
     spin.stop();
   }
 
+  // upload
   console.log();
+  let answer = false;
   try {
-    const answer = await confirm({message: `Continue?`});
-    if (answer) {
-      await upload(uploader, chainId, path, gasPriceIncreasePercentage);
-    }
+    answer = await confirm({message: `Continue?`});
   } catch (e) {}
+  if (answer) {
+    await upload(uploader, syncPoolSize, path, gasPriceIncreasePercentage);
+  }
 }
 
-const upload = async (uploader, chainId, path, gasPriceIncreasePercentage) => {
-  let syncPoolSize = 15;
-  if (chainId === ARBITRUM_NOVE_CHAIN_ID) {
-    syncPoolSize = 4;
-  }
+const upload = async (uploader, syncPoolSize, path, gasPriceIncreasePercentage) => {
   const infoArr = await uploader.upload(path, syncPoolSize, gasPriceIncreasePercentage);
-
   console.log();
   let totalStorageCost = 0n, totalChunkCount = 0, totalDataSize = 0;
   for (const file of infoArr) {
