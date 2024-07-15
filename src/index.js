@@ -152,8 +152,7 @@ const remove = async (key, domain, fileName, rpc, chainId) => {
     }
 
     const info = await checkBalance(provider, address, wallet.address);
-    console.log(`domainBalance: ${info.domainBalance}, accountBalance: ${info.accountBalance}, 
-      balanceChange: ${prevInfo.accountBalance - info.accountBalance}`);
+    console.log(`domainBalance: ${info.domainBalance}, accountBalance: ${info.accountBalance}, balanceChange: ${prevInfo.accountBalance - info.accountBalance}`);
   } else {
     console.log(error(`ERROR: ${domain} domain doesn't exist`));
   }
