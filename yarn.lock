@@ -306,7 +306,7 @@ eth-ens-namehash@^2.0.8:
     idna-uts46-hx "^2.3.1"
     js-sha3 "^0.5.7"
 
-ethers@^6.13.1, ethers@^6.7.1:
+ethers@^6.13.1:
   version "6.13.1"
   resolved "https://registry.npmjs.org/ethers/-/ethers-6.13.1.tgz#2b9f9c7455cde9d38b30fe6589972eb083652961"
   integrity sha512-hdJ2HOxg/xx97Lm9HdCWk949BfYqYWpyw4//78SiwOLgASyfrNszfMUNB2joKjvGUdwhHfaiMMFFwacVVoLR9A==
@@ -319,8 +319,10 @@ ethers@^6.13.1, ethers@^6.7.1:
     tslib "2.4.0"
     ws "8.17.1"
 
-"ethstorage-sdk@file:../ethstorage-sdk":
-  version "2.0.0"
+ethstorage-sdk@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.npmjs.org/ethstorage-sdk/-/ethstorage-sdk-2.0.1.tgz#bcb9ec612215c7bda636be957ecf70c9b0089af0"
+  integrity sha512-6VAgSnWfQZBRaVwcjuf4Z3XHHXKNlUp+4PFXjVU5TCZEPQNzGHy0Q9yo0vj8vlNMTAvDOrAAF0bHuu80HhOq2Q==
   dependencies:
     async-mutex "^0.5.0"
     dotenv "^16.4.5"
@@ -335,11 +337,6 @@ external-editor@^3.1.0:
     chardet "^0.7.0"
     iconv-lite "^0.4.24"
     tmp "^0.0.33"
-
-fs@^0.0.1-security:
-  version "0.0.1-security"
-  resolved "https://registry.npmjs.org/fs/-/fs-0.0.1-security.tgz#8a7bd37186b6dddf3813f23858b57ecaaf5e41d4"
-  integrity sha512-3XY9e1pP0CVEUCdj5BmfIZxRBTSDycnbqhIOGec9QYtmVH2fbLpj86CFWkrNOkt/Fvty4KZG5lTglL9j/gJ87w==
 
 has-flag@^4.0.0:
   version "4.0.0"
