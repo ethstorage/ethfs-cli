@@ -152,7 +152,10 @@ const remove = async (key, domain, fileName, rpc, chainId) => {
     }
 
     const info = await checkBalance(provider, address, wallet.address);
-    console.log(`domainBalance: ${info.domainBalance}, accountBalance: ${info.accountBalance}, balanceChange: ${prevInfo.accountBalance - info.accountBalance}`);
+    console.log(`domainBalance: ${info.domainBalance}, accountBalance: ${info.accountBalance}, 
+      balanceChange: ${prevInfo.accountBalance - info.accountBalance}`);
+  } else {
+    console.log(error(`ERROR: ${domain} domain doesn't exist`));
   }
 }
 
@@ -168,6 +171,11 @@ const download = async (domain, fileName, rpc, chainId) => {
 
   let handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
   if (parseInt(handler.address) > 0) {
+    const savePath = path.join(process.cwd(), fileName);
+    if (!fs.existsSync(path.dirname(savePath))) {
+      fs.mkdirSync(path.dirname(savePath));
+    }
+
     // replace rpc to eth storage
     const esRpc = ETH_STORAGE_RPC[handler.chainId];
     const ethStorageRpc = esRpc || handler.providerUrl;
@@ -177,17 +185,19 @@ const download = async (domain, fileName, rpc, chainId) => {
       privateKey: ethers.hexlify(ethers.randomBytes(32)),
       address: handler.address,
     });
-    const buf = await fd.fetchData(fileName);
-    if (buf.length > 0) {
-      const savePath = path.join(process.cwd(), fileName);
-      if (!fs.existsSync(path.dirname(savePath))) {
-        fs.mkdirSync(path.dirname(savePath));
+    await fd.download(fileName, {
+      onProgress: (progress, count, chunk) => {
+        fs.appendFileSync(savePath, chunk);
+      },
+      onFail: (e) => {
+        fs.unlink(savePath, () => {});
+        console.error(e.message);
+        console.log(error("ERROR: Download failed"), fileName);
+      },
+      onFinish: () => {
+        console.log(`Success: file path is ${savePath}`);
       }
-      fs.writeFileSync(savePath, buf);
-      console.log(`Success: file path is ${savePath}`);
-    } else {
-      console.log(error(`ERROR: The download of ${fileName} failed or the file does not exist.`));
-    }
+    });
   } else {
     console.log(error(`ERROR: ${domain} domain doesn't exist`));
   }
@@ -204,6 +214,10 @@ const uploadEvent = async (key, domain, path, type, rpc, chainId, gasPriceIncrea
   }
   if (!path) {
     console.error(error(`ERROR: invalid file!`));
+    return;
+  }
+  if (!fs.existsSync(path)) {
+    console.error(error(`ERROR: The file or folder does not exist!`), path);
     return;
   }
   if (type && type !== VERSION_BLOB && type !== VERSION_CALL_DATA) {
