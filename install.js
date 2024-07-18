@@ -1,5 +1,5 @@
 function checkNodeVersion() {
-    const requiredVersion = 17;
+    const requiredVersion = 18;
     const currentNodeVersion = parseInt(process.version.slice(1), 10);
     if (currentNodeVersion < requiredVersion) {
         console.error(`Error: Your Node.js version (${currentNodeVersion}) is not supported by this package. Please upgrade to Node.js version ${requiredVersion} or higher.`);

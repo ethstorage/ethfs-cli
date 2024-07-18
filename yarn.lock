@@ -319,10 +319,10 @@ ethers@^6.13.1:
     tslib "2.4.0"
     ws "8.17.1"
 
-ethstorage-sdk@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.npmjs.org/ethstorage-sdk/-/ethstorage-sdk-2.0.1.tgz#bcb9ec612215c7bda636be957ecf70c9b0089af0"
-  integrity sha512-6VAgSnWfQZBRaVwcjuf4Z3XHHXKNlUp+4PFXjVU5TCZEPQNzGHy0Q9yo0vj8vlNMTAvDOrAAF0bHuu80HhOq2Q==
+ethstorage-sdk@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.npmjs.org/ethstorage-sdk/-/ethstorage-sdk-2.0.3.tgz#46a9b93e240707066a158a99aef057551bb77259"
+  integrity sha512-vfRQH19p+ytkqJ1J4GhIUL4NKnU3eHXk9jUDdWhFmsVFr2VDHIBrimPowBhkqD60AwWSxFeyIxElC6l8dLPtBg==
   dependencies:
     async-mutex "^0.5.0"
     dotenv "^16.4.5"

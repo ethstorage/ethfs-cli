@@ -7,7 +7,6 @@ const { ethers } = require("ethers");
 const {
   PROVIDER_URLS,
   ETH_STORAGE_RPC,
-  ARBITRUM_NOVE_CHAIN_ID,
   ETHEREUM_CHAIN_ID,
   VERSION_BLOB,
   VERSION_CALL_DATA,
@@ -202,7 +201,7 @@ const download = async (domain, fileName, rpc, chainId) => {
   }
 }
 
-const uploadEvent = async (key, domain, path, type, rpc, chainId, gasPriceIncreasePercentage) => {
+const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasPriceIncreasePercentage) => {
   if (!isPrivateKey(key)) {
     console.error(error(`ERROR: invalid private key!`));
     return;
@@ -237,12 +236,32 @@ const uploadEvent = async (key, domain, path, type, rpc, chainId, gasPriceIncrea
     return;
   }
 
-  let syncPoolSize = 15;
-  if (handler.chainId === ARBITRUM_NOVE_CHAIN_ID) {
-    syncPoolSize = 4;
+  const syncPoolSize = 5;
+  let status = await answer(`Estimate gas cost?`);
+  if (status) {
+    // get cost
+    await estimateCost();
+    status = await answer(`Continue?`);
+    if (status) {
+      // upload
+      await upload(uploader, syncPoolSize, path, gasPriceIncreasePercentage);
+    }
+  } else {
+    // upload
+    await upload(uploader, syncPoolSize, path, gasPriceIncreasePercentage);
   }
+}
 
-  // get cost
+const answer = async (text) => {
+  let answer = false;
+  try {
+    answer = await confirm({message: text});
+  } catch (e) {
+  }
+  return answer;
+}
+
+const estimateCost = async (uploader, syncPoolSize, gasPriceIncreasePercentage) => {
   const spin = ora('Start estimating cost').start();
   try {
     const cost = await uploader.estimateCost(path, syncPoolSize, gasPriceIncreasePercentage);
@@ -259,19 +278,10 @@ const uploadEvent = async (key, domain, path, type, rpc, chainId, gasPriceIncrea
   } finally {
     spin.stop();
   }
-
-  // upload
-  console.log();
-  let answer = false;
-  try {
-    answer = await confirm({message: `Continue?`});
-  } catch (e) {}
-  if (answer) {
-    await upload(uploader, syncPoolSize, path, gasPriceIncreasePercentage);
-  }
 }
 
 const upload = async (uploader, syncPoolSize, path, gasPriceIncreasePercentage) => {
+  console.log();
   const infoArr = await uploader.upload(path, syncPoolSize, gasPriceIncreasePercentage);
   console.log();
   let totalStorageCost = 0n, totalChunkCount = 0, totalDataSize = 0;
@@ -295,7 +305,7 @@ const upload = async (uploader, syncPoolSize, path, gasPriceIncreasePercentage) 
 };
 // **** function ****
 
-module.exports.upload = uploadEvent;
+module.exports.upload = estimateAndUpload;
 module.exports.create = createDirectory;
 module.exports.refund = refund;
 module.exports.remove = remove;
