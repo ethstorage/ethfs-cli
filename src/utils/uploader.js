@@ -88,11 +88,12 @@ class Uploader {
     }
 
     // estimate cost
-    async estimateCost(path, syncPoolSize, gasPriceIncreasePercentage) {
+    async estimateCost(path, gasPriceIncreasePercentage) {
         let totalFileCount = 0;
         let totalStorageCost = 0n;
         let totalGasCost = 0n;
 
+        const syncPoolSize = 5;
         const gasFeeData = await this.#wallet.provider.getFeeData();
         return new Promise((resolve, reject) => {
             from(recursiveFiles(path, ''))
@@ -201,7 +202,8 @@ class Uploader {
     }
 
     // upload
-    async upload(path, syncPoolSize, gasPriceIncreasePercentage = 0) {
+    async upload(path, gasPriceIncreasePercentage = 0) {
+        const syncPoolSize = this.#uploadType === VERSION_BLOB ? 3 : 5;
         const results = [];
         return new Promise((resolve, reject) => {
             from(recursiveFiles(path, ''))

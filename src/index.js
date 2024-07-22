@@ -236,19 +236,18 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasPrice
     return;
   }
 
-  const syncPoolSize = 5;
   let status = await answer(`Estimate gas cost?`);
   if (status) {
     // get cost
-    await estimateCost();
+    await estimateCost(uploader, path, gasPriceIncreasePercentage);
     status = await answer(`Continue?`);
     if (status) {
       // upload
-      await upload(uploader, syncPoolSize, path, gasPriceIncreasePercentage);
+      await upload(uploader, path, gasPriceIncreasePercentage);
     }
   } else {
     // upload
-    await upload(uploader, syncPoolSize, path, gasPriceIncreasePercentage);
+    await upload(uploader, path, gasPriceIncreasePercentage);
   }
 }
 
@@ -261,10 +260,10 @@ const answer = async (text) => {
   return answer;
 }
 
-const estimateCost = async (uploader, syncPoolSize, gasPriceIncreasePercentage) => {
+const estimateCost = async (uploader, path, gasPriceIncreasePercentage) => {
   const spin = ora('Start estimating cost').start();
   try {
-    const cost = await uploader.estimateCost(path, syncPoolSize, gasPriceIncreasePercentage);
+    const cost = await uploader.estimateCost(path, gasPriceIncreasePercentage);
     console.log();
     console.log(`Info: The number of files is ${error(cost.totalFileCount.toString())}`);
     console.log(`Info: Storage cost is expected to be ${error(ethers.formatEther(cost.totalStorageCost))} ETH`);
@@ -274,15 +273,15 @@ const estimateCost = async (uploader, syncPoolSize, gasPriceIncreasePercentage) 
     console.log();
     const length = e.message.length;
     console.log(length > 400 ? (e.message.substring(0, 200) + " ... " + e.message.substring(length - 190, length)) : e.message);
-    console.log(error(`Estimate gas failed, the failure file is ${e.value}`));
+    console.log(error(e.value ? `Estimate gas failed, the failure file is ${e.value}` : 'Estimate gas failed'));
   } finally {
     spin.stop();
   }
 }
 
-const upload = async (uploader, syncPoolSize, path, gasPriceIncreasePercentage) => {
+const upload = async (uploader, path, gasPriceIncreasePercentage) => {
   console.log();
-  const infoArr = await uploader.upload(path, syncPoolSize, gasPriceIncreasePercentage);
+  const infoArr = await uploader.upload(path, gasPriceIncreasePercentage);
   console.log();
   let totalStorageCost = 0n, totalChunkCount = 0, totalDataSize = 0;
   for (const file of infoArr) {
