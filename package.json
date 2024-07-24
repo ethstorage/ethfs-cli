@@ -20,7 +20,7 @@
     "commander": "^11.1.0",
     "eth-ens-namehash": "^2.0.8",
     "ethers": "^6.13.1",
-    "ethstorage-sdk": "^2.0.3",
+    "ethstorage-sdk": "^2.0.4",
     "js-sha3": "^0.8.0",
     "ora": "^5.4.1",
     "rxjs": "^7.8.1"
