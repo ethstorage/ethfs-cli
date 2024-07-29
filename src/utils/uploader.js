@@ -216,7 +216,7 @@ class Uploader {
         });
     }
 
-    async #upload(fileInfo, syncPoolSize, gasPriceIncreasePercentage = 0) {
+    async #upload(fileInfo, gasPriceIncreasePercentage = 0) {
         if (this.#uploadType === VERSION_BLOB) {
             return await this.#uploadFileByBlob(fileInfo);
         } else if (this.#uploadType === VERSION_CALL_DATA) {
