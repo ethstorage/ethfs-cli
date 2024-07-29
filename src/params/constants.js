@@ -106,7 +106,7 @@ const PROVIDER_URLS = {
     [QUARKCHAIN_CHAIN_ID]: 'https://mainnet-s0-ethapi.quarkchain.io',
     [QUARKCHAIN_DEVNET_CHAIN_ID]: 'https://devnet-s0-ethapi.quarkchain.io',
     [QUARKCHAIN_L2_DEVNET_CHAIN_ID]: 'http://142.132.154.16:8545',
-    [QUARKCHAIN_L2_TESTNET_CHAIN_ID]: 'http://65.109.20.29:8545',
+    [QUARKCHAIN_L2_TESTNET_CHAIN_ID]: 'https://rpc.testnet.l2.quarkchain.io:8545',
 }
 
 const NS_ADDRESS = {
