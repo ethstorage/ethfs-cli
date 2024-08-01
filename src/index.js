@@ -2,14 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const ora = require("ora");
 const { confirm } = require("@inquirer/prompts");
-const { FlatDirectory } = require("ethstorage-sdk");
+const { FlatDirectory, UPLOAD_TYPE_CALLDATA, UPLOAD_TYPE_BLOB} = require("ethstorage-sdk");
 const { ethers } = require("ethers");
 const {
   PROVIDER_URLS,
   ETH_STORAGE_RPC,
   ETHEREUM_CHAIN_ID,
-  VERSION_BLOB,
-  VERSION_CALL_DATA,
   FlatDirectoryAbi
 } = require('./params');
 const {
@@ -218,7 +216,7 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasPrice
     console.error(error(`ERROR: The file or folder does not exist!`), path);
     return;
   }
-  if (type && type !== VERSION_BLOB && type !== VERSION_CALL_DATA) {
+  if (type && Number(type) !== UPLOAD_TYPE_CALLDATA && Number(type) !== UPLOAD_TYPE_BLOB) {
     console.error(error(`ERROR: invalid upload type!`));
     return;
   }
