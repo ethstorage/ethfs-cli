@@ -114,7 +114,7 @@ class Uploader {
             const file = new NodeFile(path);
             const cost = await this.#flatDirectory.estimateCost({
                 key: name,
-                file: file,
+                content: file,
                 type: this.#uploadType,
                 gasIncPct: gasPriceIncreasePercentage
             });
@@ -175,7 +175,7 @@ class Uploader {
         const file = new NodeFile(path);
         await this.#flatDirectory.upload({
             key: name,
-            file: file,
+            content: file,
             type: this.#uploadType,
             gasIncPct: gasPriceIncreasePercentage,
             callback: callback
