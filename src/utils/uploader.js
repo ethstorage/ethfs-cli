@@ -129,7 +129,7 @@ class Uploader {
 
     // upload
     async upload(path, gasPriceIncreasePercentage) {
-        const syncPoolSize = this.#uploadType === UPLOAD_TYPE_BLOB ? 3 : 5;
+        const syncPoolSize = 10;
         const results = [];
         return new Promise((resolve, reject) => {
             from(recursiveFiles(path, ''))
