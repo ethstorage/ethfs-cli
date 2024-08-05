@@ -86,7 +86,7 @@ class Uploader {
         let totalStorageCost = 0n;
         let totalGasCost = 0n;
 
-        const syncPoolSize = 5;
+        const syncPoolSize = 6;
         return new Promise((resolve, reject) => {
             from(recursiveFiles(path, ''))
                 .pipe(mergeMap(info => this.#estimate(info, gasPriceIncreasePercentage), syncPoolSize))
@@ -129,7 +129,7 @@ class Uploader {
 
     // upload
     async upload(path, gasPriceIncreasePercentage) {
-        const syncPoolSize = 10;
+        const syncPoolSize = 6;
         const results = [];
         return new Promise((resolve, reject) => {
             from(recursiveFiles(path, ''))
