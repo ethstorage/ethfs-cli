@@ -81,20 +81,22 @@ class Uploader {
     }
 
     // estimate cost
-    async estimateCost(path, gasPriceIncreasePercentage) {
+    async estimateCost(spin, path, gasPriceIncreasePercentage) {
         let totalFileCount = 0;
         let totalStorageCost = 0n;
         let totalGasCost = 0n;
 
         const syncPoolSize = 6;
+        const files = recursiveFiles(path, '');
         return new Promise((resolve, reject) => {
-            from(recursiveFiles(path, ''))
+            from(files)
                 .pipe(mergeMap(info => this.#estimate(info, gasPriceIncreasePercentage), syncPoolSize))
                 .subscribe({
                     next: (cost) => {
                         totalFileCount++;
                         totalStorageCost += cost.totalStorageCost;
                         totalGasCost += cost.totalGasCost;
+                        spin.text = `Estimating cost progress: ${Math.ceil(totalFileCount / files.length * 100)}%`;
                     },
                     error: (error) => { reject(error) },
                     complete: () => {

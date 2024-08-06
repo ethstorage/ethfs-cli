@@ -261,7 +261,9 @@ const answer = async (text) => {
 const estimateCost = async (uploader, path, gasPriceIncreasePercentage) => {
   const spin = ora('Start estimating cost').start();
   try {
-    const cost = await uploader.estimateCost(path, gasPriceIncreasePercentage);
+    const cost = await uploader.estimateCost(spin, path, gasPriceIncreasePercentage);
+    spin.succeed('Estimating cost progress: 100%');
+
     console.log();
     console.log(`Info: The number of files is ${error(cost.totalFileCount.toString())}`);
     console.log(`Info: Storage cost is expected to be ${error(ethers.formatEther(cost.totalStorageCost))} ETH`);
