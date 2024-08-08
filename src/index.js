@@ -8,7 +8,9 @@ const {
   PROVIDER_URLS,
   ETH_STORAGE_RPC,
   ETHEREUM_CHAIN_ID,
-  FlatDirectoryAbi
+  FlatDirectoryAbi,
+  TYPE_CALLDATA,
+  TYPE_BLOB
 } = require('./params');
 const {
   isPrivateKey,
@@ -216,9 +218,15 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasPrice
     console.error(error(`ERROR: The file or folder does not exist!`), path);
     return;
   }
-  if (type && Number(type) !== UPLOAD_TYPE_CALLDATA && Number(type) !== UPLOAD_TYPE_BLOB) {
-    console.error(error(`ERROR: invalid upload type!`));
-    return;
+  if (type) {
+    if(type === TYPE_CALLDATA) {
+      type = UPLOAD_TYPE_CALLDATA;
+    } else if(type === TYPE_BLOB) {
+      type = UPLOAD_TYPE_BLOB;
+    } else if (Number(type) !== UPLOAD_TYPE_CALLDATA && Number(type) !== UPLOAD_TYPE_BLOB) {
+      console.error(error(`ERROR: invalid upload type!`));
+      return;
+    }
   }
 
   const handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
