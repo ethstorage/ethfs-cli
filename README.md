@@ -15,15 +15,15 @@ npx ethfs-cli upload -f <directory|file> -a <address> -p <private-key> -r [rpc] 
 <br/>
 
 ## Command
-| Short Name | Full Name                    | description                                |   
-|------------|------------------------------|--------------------------------------------|
-| -p         | --privateKey                 | private key                                |
-| -a         | --address                    | contract address / domain name             |
-| -f         | --file                       | upload file path / name                    |
-| -c         | --chainId                    | chain id                                   |
-| -r         | --rpc                        | provider url                               |
-| -t         | --type                       | file save type<br/>on chain: 1<br/>blob: 2 |
-| -g         | --gasPriceIncreasePercentage | gas price increase percentage              |
+| Short Name | Full Name                    | description                                                                |   
+|------------|------------------------------|----------------------------------------------------------------------------|
+| -p         | --privateKey                 | private key                                                                |
+| -a         | --address                    | contract address / domain name                                             |
+| -f         | --file                       | upload file path / name                                                    |
+| -c         | --chainId                    | chain id                                                                   |
+| -r         | --rpc                        | provider url                                                               |
+| -t         | --type                       | file upload type:<br/>calldata: `1` or `calldata` <br/>blob: `2` or `blob` |
+| -g         | --gasPriceIncreasePercentage | gas price increase percentage                                              |
  <br/>
 
 ## Supported networks
@@ -115,8 +115,10 @@ w3ns
 FlatDirectory address
   ethfs-cli upload -f index.html -a gor:0x1825...2388 -p 0x32... -g 20
   ethfs-cli upload -f index.html -a xxx:0x1825...2388 -p 0x32... -r https://rpc.xxx -t 1
+  ethfs-cli upload -f index.html -a xxx:0x1825...2388 -p 0x32... -r https://rpc.xxx -t calldata
 ens
-  ethfs-cli upload -f dist -a eth:ens.eth -p 0x32... -r https://rpc.ankr.com/eth -t 2 -g 20
+  ethfs-cli upload -f dist -a eth:ens.eth -p 0x32... -r https://rpc.ankr.com/eth -t 2
+  ethfs-cli upload -f dist -a eth:ens.eth -p 0x32... -r https://rpc.ankr.com/eth -t blob
 w3ns
   ethfs-cli upload -f dist -a w3q-g:home.w3q -p 0x32... -t 2 -g 20
 ```
