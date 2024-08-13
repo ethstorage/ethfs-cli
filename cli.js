@@ -84,9 +84,10 @@ program
     .option('-c, --chainId [chainId]', 'chain id')
     .option('-r, --rpc [rpc]', 'provider url')
     .option('-g, --gasIncPct [gasIncPct]', 'gas price increase percentage')
+    .option('-s, --threadPoolSize [threadPoolSize]', 'thread pool size')
     .action(() => {
         const opts = program.opts();
-        upload(opts.privateKey, opts.address, opts.file, opts.type, opts.rpc, opts.chainId, opts.gasPriceIncreasePercentage);
+        upload(opts.privateKey, opts.address, opts.file, opts.type, opts.rpc, opts.chainId, opts.gasIncPct, opts.threadPoolSize);
     });
 
 program.parse(process.argv);

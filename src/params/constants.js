@@ -130,6 +130,8 @@ const ETH_STORAGE_RPC = {
 const TYPE_CALLDATA = 'calldata';
 const TYPE_BLOB = 'blob';
 
+const DEFAULT_THREAD_POOL_SIZE = 6;
+
 module.exports = {
     NETWORK_MAPPING,
     PROVIDER_URLS,
@@ -142,5 +144,7 @@ module.exports = {
     ETHEREUM_CHAIN_ID,
 
     TYPE_CALLDATA,
-    TYPE_BLOB
+    TYPE_BLOB,
+
+    DEFAULT_THREAD_POOL_SIZE
 }
