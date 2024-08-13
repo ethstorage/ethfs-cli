@@ -83,7 +83,7 @@ program
     .option('-t, --type [type]', 'uploader type')
     .option('-c, --chainId [chainId]', 'chain id')
     .option('-r, --rpc [rpc]', 'provider url')
-    .option('-g, --gasPriceIncreasePercentage [gasPriceIncreasePercentage]', 'gas price increase percentage')
+    .option('-g, --gasIncPct [gasIncPct]', 'gas price increase percentage')
     .action(() => {
         const opts = program.opts();
         upload(opts.privateKey, opts.address, opts.file, opts.type, opts.rpc, opts.chainId, opts.gasPriceIncreasePercentage);
