@@ -255,6 +255,7 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
     // upload
     await upload(uploader, path, gasIncPct, threadPoolSize);
   }
+  process.exit(0);
 }
 
 const answer = async (text) => {
