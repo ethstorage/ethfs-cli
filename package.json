@@ -2,7 +2,7 @@
   "name": "ethfs-cli",
   "version": "1.1.1",
   "description": "A tool to upload files easily to a filesystem smart contract following ERC-5018.",
-  "main": "index.js",
+  "main": "cli.js",
   "scripts": {
     "preinstall": "node install.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -14,17 +14,18 @@
   "author": "ethstorage",
   "license": "MIT",
   "dependencies": {
+    "@inquirer/prompts": "^5.0.2",
     "colors-cli": "^1.0.33",
     "commander": "^11.1.0",
     "eth-ens-namehash": "^2.0.8",
-    "ethers": "^6.7.1",
-    "ethstorage-sdk": "^1.2.8",
-    "fs": "^0.0.1-security",
+    "ethers": "^6.13.1",
+    "ethstorage-sdk": "^2.1.2",
     "js-sha3": "^0.8.0",
+    "ora": "^5.4.1",
     "rxjs": "^7.8.1"
   },
   "engines": {
-    "node": ">=17.0.0"
+    "node": ">=18.0.0"
   },
   "bin": {
     "ethfs-cli": "cli.js"
