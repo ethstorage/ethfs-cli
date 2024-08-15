@@ -95,8 +95,8 @@ class Uploader {
                 .subscribe({
                     next: (cost) => {
                         totalFileCount++;
-                        totalStorageCost += cost.totalStorageCost;
-                        totalGasCost += cost.totalGasCost;
+                        totalStorageCost += cost.storageCost;
+                        totalGasCost += cost.gasCost;
                         spin.text = `Estimating cost progress: ${Math.ceil(totalFileCount / files.length * 100)}%`;
                     },
                     error: (error) => { reject(error) },
@@ -115,15 +115,12 @@ class Uploader {
         try {
             const {path, name} = fileInfo;
             const file = new NodeFile(path);
-            const cost = await this.#flatDirectory.estimateCost({
+            return await this.#flatDirectory.estimateCost({
                 key: name,
                 content: file,
                 type: this.#uploadType,
                 gasIncPct: gasIncPct
             });
-            return {
-                totalStorageCost: cost.storageCost, totalGasCost: cost.gasCost
-            }
         } catch (e) {
             throw new UploadError(e.message, fileInfo.name);
         }
