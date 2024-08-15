@@ -176,16 +176,6 @@ async function checkBalance(provider, domainAddr, accountAddr) {
     });
 }
 
-function getFileChunk(path, fileSize, start, end) {
-    end = end > fileSize ? fileSize : end;
-    const length = end - start;
-    const buf = Buffer.alloc(length);
-    const fd = fs.openSync(path, 'r');
-    fs.readSync(fd, buf, 0, length, start);
-    fs.closeSync(fd);
-    return buf;
-}
-
 function recursiveFiles(path, basePath) {
     let filePools = [];
     const fileStat = fs.statSync(path);
@@ -212,6 +202,5 @@ module.exports = {
     getChainIdByRpc,
     getWebHandler,
     checkBalance,
-    getFileChunk,
     recursiveFiles
 }
