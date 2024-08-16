@@ -127,8 +127,10 @@ const ETH_STORAGE_RPC = {
     [QUARKCHAIN_L2_TESTNET_CHAIN_ID]: 'http://65.109.115.36:9540',
 }
 
-const VERSION_CALL_DATA = '1';
-const VERSION_BLOB = '2';
+const TYPE_CALLDATA = 'calldata';
+const TYPE_BLOB = 'blob';
+
+const DEFAULT_THREAD_POOL_SIZE = 6;
 
 module.exports = {
     NETWORK_MAPPING,
@@ -141,6 +143,8 @@ module.exports = {
     ARBITRUM_NOVE_CHAIN_ID,
     ETHEREUM_CHAIN_ID,
 
-    VERSION_CALL_DATA,
-    VERSION_BLOB
+    TYPE_CALLDATA,
+    TYPE_BLOB,
+
+    DEFAULT_THREAD_POOL_SIZE
 }

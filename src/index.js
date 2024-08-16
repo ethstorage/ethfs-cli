@@ -8,7 +8,9 @@ const {
   PROVIDER_URLS,
   ETH_STORAGE_RPC,
   ETHEREUM_CHAIN_ID,
-  FlatDirectoryAbi
+  FlatDirectoryAbi,
+  TYPE_CALLDATA,
+  TYPE_BLOB
 } = require('./params');
 const {
   isPrivateKey,
@@ -199,7 +201,7 @@ const download = async (domain, fileName, rpc, chainId) => {
   }
 }
 
-const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasPriceIncreasePercentage) => {
+const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPct, threadPoolSize) => {
   if (!isPrivateKey(key)) {
     console.error(error(`ERROR: invalid private key!`));
     return;
@@ -216,9 +218,15 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasPrice
     console.error(error(`ERROR: The file or folder does not exist!`), path);
     return;
   }
-  if (type && Number(type) !== UPLOAD_TYPE_CALLDATA && Number(type) !== UPLOAD_TYPE_BLOB) {
-    console.error(error(`ERROR: invalid upload type!`));
-    return;
+  if (type) {
+    if(type === TYPE_CALLDATA) {
+      type = UPLOAD_TYPE_CALLDATA;
+    } else if(type === TYPE_BLOB) {
+      type = UPLOAD_TYPE_BLOB;
+    } else if (Number(type) !== UPLOAD_TYPE_CALLDATA && Number(type) !== UPLOAD_TYPE_BLOB) {
+      console.error(error(`ERROR: invalid upload type!`));
+      return;
+    }
   }
 
   const handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
@@ -237,16 +245,17 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasPrice
   let status = await answer(`Estimate gas cost?`);
   if (status) {
     // get cost
-    await estimateCost(uploader, path, gasPriceIncreasePercentage);
+    await estimateCost(uploader, path, gasIncPct, threadPoolSize);
     status = await answer(`Continue?`);
     if (status) {
       // upload
-      await upload(uploader, path, gasPriceIncreasePercentage);
+      await upload(uploader, path, gasIncPct, threadPoolSize);
     }
   } else {
     // upload
-    await upload(uploader, path, gasPriceIncreasePercentage);
+    await upload(uploader, path, gasIncPct, threadPoolSize);
   }
+  process.exit(0);
 }
 
 const answer = async (text) => {
@@ -258,10 +267,10 @@ const answer = async (text) => {
   return answer;
 }
 
-const estimateCost = async (uploader, path, gasPriceIncreasePercentage) => {
+const estimateCost = async (uploader, path, gasIncPct, threadPoolSize) => {
   const spin = ora('Start estimating cost').start();
   try {
-    const cost = await uploader.estimateCost(spin, path, gasPriceIncreasePercentage);
+    const cost = await uploader.estimateCost(spin, path, gasIncPct, threadPoolSize);
     spin.succeed('Estimating cost progress: 100%');
 
     console.log();
@@ -279,9 +288,9 @@ const estimateCost = async (uploader, path, gasPriceIncreasePercentage) => {
   }
 }
 
-const upload = async (uploader, path, gasPriceIncreasePercentage) => {
+const upload = async (uploader, path, gasIncPct, threadPoolSize) => {
   console.log();
-  const infoArr = await uploader.upload(path, gasPriceIncreasePercentage);
+  const infoArr = await uploader.upload(path, gasIncPct, threadPoolSize);
   console.log();
   let totalStorageCost = 0n, totalChunkCount = 0, totalDataSize = 0;
   for (const file of infoArr) {

@@ -8,7 +8,8 @@ const {
 const {NodeFile} = require("ethstorage-sdk/file");
 
 const {
-    FlatDirectoryAbi
+    FlatDirectoryAbi,
+    DEFAULT_THREAD_POOL_SIZE
 } = require('../params');
 const {
     recursiveFiles
@@ -81,21 +82,21 @@ class Uploader {
     }
 
     // estimate cost
-    async estimateCost(spin, path, gasPriceIncreasePercentage) {
+    async estimateCost(spin, path, gasIncPct, threadPoolSize) {
         let totalFileCount = 0;
         let totalStorageCost = 0n;
         let totalGasCost = 0n;
 
-        const syncPoolSize = 6;
+        const syncPoolSize = threadPoolSize || DEFAULT_THREAD_POOL_SIZE;
         const files = recursiveFiles(path, '');
         return new Promise((resolve, reject) => {
             from(files)
-                .pipe(mergeMap(info => this.#estimate(info, gasPriceIncreasePercentage), syncPoolSize))
+                .pipe(mergeMap(info => this.#estimate(info, gasIncPct), syncPoolSize))
                 .subscribe({
                     next: (cost) => {
                         totalFileCount++;
-                        totalStorageCost += cost.totalStorageCost;
-                        totalGasCost += cost.totalGasCost;
+                        totalStorageCost += cost.storageCost;
+                        totalGasCost += cost.gasCost;
                         spin.text = `Estimating cost progress: ${Math.ceil(totalFileCount / files.length * 100)}%`;
                     },
                     error: (error) => { reject(error) },
@@ -110,19 +111,16 @@ class Uploader {
         });
     }
 
-    async #estimate(fileInfo, gasPriceIncreasePercentage) {
+    async #estimate(fileInfo, gasIncPct) {
         try {
             const {path, name} = fileInfo;
             const file = new NodeFile(path);
-            const cost = await this.#flatDirectory.estimateCost({
+            return await this.#flatDirectory.estimateCost({
                 key: name,
                 content: file,
                 type: this.#uploadType,
-                gasIncPct: gasPriceIncreasePercentage
+                gasIncPct: gasIncPct
             });
-            return {
-                totalStorageCost: cost.storageCost, totalGasCost: cost.gasCost
-            }
         } catch (e) {
             throw new UploadError(e.message, fileInfo.name);
         }
@@ -130,12 +128,12 @@ class Uploader {
 
 
     // upload
-    async upload(path, gasPriceIncreasePercentage) {
-        const syncPoolSize = 6;
+    async upload(path, gasIncPct, threadPoolSize) {
+        const syncPoolSize = threadPoolSize || DEFAULT_THREAD_POOL_SIZE;
         const results = [];
         return new Promise((resolve, reject) => {
             from(recursiveFiles(path, ''))
-                .pipe(mergeMap(info => this.#upload(info, gasPriceIncreasePercentage), syncPoolSize))
+                .pipe(mergeMap(info => this.#upload(info, gasIncPct), syncPoolSize))
                 .subscribe({
                     next: (info) => { results.push(info); },
                     error: (error) => { reject(error); },
@@ -144,7 +142,7 @@ class Uploader {
         });
     }
 
-    async #upload(fileInfo, gasPriceIncreasePercentage) {
+    async #upload(fileInfo, gasIncPct) {
         const {path, name} = fileInfo;
 
         let totalChunkCount = 0;
@@ -179,7 +177,7 @@ class Uploader {
             key: name,
             content: file,
             type: this.#uploadType,
-            gasIncPct: gasPriceIncreasePercentage,
+            gasIncPct: gasIncPct,
             callback: callback
         });
         return {
