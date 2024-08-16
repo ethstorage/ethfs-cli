@@ -34,6 +34,7 @@ npx ethfs-cli upload -f <directory|file> -a <address> -p <private-key> -c [chain
 | -t         | --type           | file upload type:<br/>calldata: `1` or `calldata` <br/>blob: `2` or `blob` |
 | -g         | --gasIncPct      | gas price increase percentage                                              |
 | -s         | --threadPoolSize | number of threads for concurrent file uploads                              |
+| -e         | --estimateGas    | estimate gas                                                               |
  <br/>
 
 
@@ -108,7 +109,7 @@ Upload files, you need to specify the upload type. The default type is blob:2.<b
 If you want to use name instead of FlatDirectory address, the name should be pointed to the FlatDirectory 
 address in advance. Click [here](https://docs.web3url.io/tutorials-on-ethstorage-early-testnet/bind-domain-names-to-your-flatdirectory) for details.
 ```
-ethfs-cli upload -f <address|domain> -a <address> -p <private-key> -t [upload-type] -c [chain-id] -r [rpc] -g [gas-price-increase-percentage] -s [thread-pool-size]
+ethfs-cli upload -f <address|domain> -a <address> -p <private-key> -t [upload-type] -c [chain-id] -r [rpc] -g [gas-price-increase-percentage] -e [estimate-gas] -s [thread-pool-size]
 ```
 ##### Example
 ```
@@ -117,6 +118,7 @@ FlatDirectory address
   ethfs-cli upload -f index.html -a 0x1825...2388 -p 0x32... -c 11155111 -t 1
   ethfs-cli upload -f index.html -a 0x1825...2388 -p 0x32... -r https://rpc.xxx -t calldata -g 20
   ethfs-cli upload -f index.html -a 0x1825...2388 -p 0x32... -r https://rpc.xxx -t calldata -s 12
+  ethfs-cli upload -f index.html -a 0x1825...2388 -p 0x32... -r https://rpc.xxx -t calldata -e
 ens
   ethfs-cli upload -f dist -a eth:ens.eth -p 0x32... -r https://rpc.ankr.com/eth -t 2
   ethfs-cli upload -f dist -a eth:ens.eth -p 0x32... -r https://rpc.ankr.com/eth -t blob

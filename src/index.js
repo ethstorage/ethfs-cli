@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const ora = require("ora");
-const { confirm } = require("@inquirer/prompts");
+const readline = require('readline');
 const { FlatDirectory, UPLOAD_TYPE_CALLDATA, UPLOAD_TYPE_BLOB} = require("ethstorage-sdk");
 const { ethers } = require("ethers");
 const {
@@ -201,7 +201,7 @@ const download = async (domain, fileName, rpc, chainId) => {
   }
 }
 
-const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPct, threadPoolSize) => {
+const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPct, threadPoolSize, estimateGas) => {
   if (!isPrivateKey(key)) {
     console.error(error(`ERROR: invalid private key!`));
     return;
@@ -242,13 +242,12 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
     return;
   }
 
-  let status = await answer(`Estimate gas cost?`);
-  if (status) {
+  if (estimateGas) {
     // get cost
     await estimateCost(uploader, path, gasIncPct, threadPoolSize);
-    status = await answer(`Continue?`);
-    if (status) {
+    if (await answer(`Continue?`)) {
       // upload
+      console.log();
       await upload(uploader, path, gasIncPct, threadPoolSize);
     }
   } else {
@@ -259,12 +258,17 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
 }
 
 const answer = async (text) => {
-  let answer = false;
-  try {
-    answer = await confirm({message: text});
-  } catch (e) {
-  }
-  return answer;
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+
+    rl.question(text + ' (y/n) ', (answer) => {
+      rl.close();
+      resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'Y' || answer.toLowerCase() === '');
+    });
+  });
 }
 
 const estimateCost = async (uploader, path, gasIncPct, threadPoolSize) => {
@@ -289,7 +293,6 @@ const estimateCost = async (uploader, path, gasIncPct, threadPoolSize) => {
 }
 
 const upload = async (uploader, path, gasIncPct, threadPoolSize) => {
-  console.log();
   const infoArr = await uploader.upload(path, gasIncPct, threadPoolSize);
   console.log();
   let totalStorageCost = 0n, totalChunkCount = 0, totalDataSize = 0;
