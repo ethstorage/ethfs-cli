@@ -7,11 +7,13 @@ const { create, refund, upload, remove, setDefault, download } = require("./src"
 program
     .option('-p, --privateKey [privateKey]', 'private key')
     .option('-a, --address [address]', 'flat directory address')
-    .option('-r, --rpc [rpc]', 'provider url')
     .option('-f, --file [file]', 'upload file path/name')
     .option('-c, --chainId [chainId]', 'chain id')
+    .option('-r, --rpc [rpc]', 'provider url')
     .option('-t, --type [type]', 'uploader type')
-    .option('-g, --gasPriceIncreasePercentage [gasPriceIncreasePercentage]', 'gas price increase percentage');
+    .option('-g, --gasIncPct [gasIncPct]', 'gas price increase percentage')
+    .option('-s, --threadPoolSize [threadPoolSize]', 'thread pool size')
+    .option('-e, --estimateGas [estimateGas]', 'estimate gas');
 
 program
     .command('create')
@@ -84,10 +86,11 @@ program
     .option('-c, --chainId [chainId]', 'chain id')
     .option('-r, --rpc [rpc]', 'provider url')
     .option('-g, --gasIncPct [gasIncPct]', 'gas price increase percentage')
+    .option('-e, --estimateGas [estimateGas]', 'estimate gas')
     .option('-s, --threadPoolSize [threadPoolSize]', 'thread pool size')
     .action(() => {
         const opts = program.opts();
-        upload(opts.privateKey, opts.address, opts.file, opts.type, opts.rpc, opts.chainId, opts.gasIncPct, opts.threadPoolSize);
+        upload(opts.privateKey, opts.address, opts.file, opts.type, opts.rpc, opts.chainId, opts.gasIncPct, opts.threadPoolSize, opts.estimateGas);
     });
 
 program.parse(process.argv);

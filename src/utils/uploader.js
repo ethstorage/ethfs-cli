@@ -153,10 +153,14 @@ class Uploader {
 
         const callback = {
             onProgress: (progress, count, isChange) => {
+                const indexArr = [];
+                for (let i = currentSuccessIndex + 1; i <= progress; i++) {
+                    indexArr.push(i);
+                }
                 if (isChange) {
-                    console.log(`FlatDirectory: The [${currentSuccessIndex + 1}-${progress}] chunks have been uploaded`, '', name);
+                    console.log("FlatDirectory: The " + indexArr.toString() + " chunks have been uploaded", '', name);
                 } else {
-                    console.log(`FlatDirectory: The [${currentSuccessIndex + 1}-${progress}] chunks is not changed`, '', name);
+                    console.log("FlatDirectory: The " + indexArr.toString() + " chunks are not changed", '', name);
                 }
                 currentSuccessIndex = progress;
                 totalChunkCount = count;
