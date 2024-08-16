@@ -158,9 +158,9 @@ class Uploader {
                     indexArr.push(i);
                 }
                 if (isChange) {
-                    console.log("FlatDirectory: The " + indexArr.toString() + " chunks have been uploaded", '', name);
+                    console.log("FlatDirectory: Chunks " + indexArr.join(',') + " have been uploaded", '', name);
                 } else {
-                    console.log("FlatDirectory: The " + indexArr.toString() + " chunks are not changed", '', name);
+                    console.log("FlatDirectory: Chunks " + indexArr.join(',') + " have not been changed", '', name);
                 }
                 currentSuccessIndex = progress;
                 totalChunkCount = count;
