@@ -7,10 +7,7 @@ const {
 } = require("ethstorage-sdk");
 const {NodeFile} = require("ethstorage-sdk/file");
 
-const {
-    FlatDirectoryAbi,
-    DEFAULT_THREAD_POOL_SIZE
-} = require('../params');
+const { FlatDirectoryAbi } = require('../params');
 const {
     recursiveFiles
 } = require('./utils');
@@ -87,11 +84,10 @@ class Uploader {
         let totalStorageCost = 0n;
         let totalGasCost = 0n;
 
-        const syncPoolSize = threadPoolSize || DEFAULT_THREAD_POOL_SIZE;
         const files = recursiveFiles(path, '');
         return new Promise((resolve, reject) => {
             from(files)
-                .pipe(mergeMap(info => this.#estimate(info, gasIncPct), syncPoolSize))
+                .pipe(mergeMap(info => this.#estimate(info, gasIncPct), threadPoolSize))
                 .subscribe({
                     next: (cost) => {
                         totalFileCount++;
@@ -129,11 +125,10 @@ class Uploader {
 
     // upload
     async upload(path, gasIncPct, threadPoolSize) {
-        const syncPoolSize = threadPoolSize || DEFAULT_THREAD_POOL_SIZE;
         const results = [];
         return new Promise((resolve, reject) => {
             from(recursiveFiles(path, ''))
-                .pipe(mergeMap(info => this.#upload(info, gasIncPct), syncPoolSize))
+                .pipe(mergeMap(info => this.#upload(info, gasIncPct), threadPoolSize))
                 .subscribe({
                     next: (info) => { results.push(info); },
                     error: (error) => { reject(error); },

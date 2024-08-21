@@ -10,7 +10,11 @@ const {
   ETHEREUM_CHAIN_ID,
   FlatDirectoryAbi,
   TYPE_CALLDATA,
-  TYPE_BLOB
+  TYPE_BLOB,
+  SEPOLIA_CHAIN_ID,
+  QUARKCHAIN_L2_TESTNET_CHAIN_ID,
+  DEFAULT_THREAD_POOL_SIZE_LOW,
+  DEFAULT_THREAD_POOL_SIZE_HIGH
 } = require('./params');
 const {
   isPrivateKey,
@@ -229,11 +233,20 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
     }
   }
 
-  const handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
+  const handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT, false);
   if (!handler.providerUrl || parseInt(handler.address) <= 0) {
     console.log(error(`ERROR: ${domain} domain doesn't exist`));
     return;
   }
+
+  if (threadPoolSize) {
+    threadPoolSize = Number(threadPoolSize);
+  } else if (handler.chainId === SEPOLIA_CHAIN_ID || handler.chainId === QUARKCHAIN_L2_TESTNET_CHAIN_ID) {
+    threadPoolSize = DEFAULT_THREAD_POOL_SIZE_HIGH;
+  } else {
+    threadPoolSize = DEFAULT_THREAD_POOL_SIZE_LOW;
+  }
+  console.log(`threadPoolSize = ${threadPoolSize} \n`);
 
   // query total cost
   const uploader = await Uploader.create(key, handler.providerUrl, handler.chainId, handler.address, type);
