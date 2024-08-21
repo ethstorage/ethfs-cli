@@ -24,17 +24,17 @@ npx ethfs-cli upload -f <directory|file> -a <address> -p <private-key> -c [chain
 
 
 ## Command
-| Short Name | Full Name        | description                                                                                                     |   
-|------------|------------------|-----------------------------------------------------------------------------------------------------------------|
-| -p         | --privateKey     | private key                                                                                                     |
-| -a         | --address        | contract address / domain name                                                                                  |
-| -f         | --file           | upload file path / name                                                                                         |
-| -c         | --chainId        | chain id                                                                                                        |
-| -r         | --rpc            | provider url                                                                                                    |
-| -t         | --type           | file upload type:<br/>calldata: `1` or `calldata` <br/>blob: `2` or `blob`                                      |
-| -g         | --gasIncPct      | gas price increase percentage                                                                                   |
-| -s         | --threadPoolSize | number of threads for concurrent file uploads, default value:<br/>Sepolia, QuarkChain L2: `15`<br/> others: `6` |
-| -e         | --estimateGas    | estimate gas                                                                                                    |
+| Short Name | Full Name        | description                                                                                            |   
+|------------|------------------|--------------------------------------------------------------------------------------------------------|
+| -p         | --privateKey     | private key                                                                                            |
+| -a         | --address        | contract address / domain name                                                                         |
+| -f         | --file           | upload file path / name                                                                                |
+| -c         | --chainId        | chain id                                                                                               |
+| -r         | --rpc            | provider url                                                                                           |
+| -t         | --type           | file upload type:<br/>calldata: `1` or `calldata` <br/>blob: `2` or `blob`                             |
+| -g         | --gasIncPct      | gas price increase percentage                                                                          |
+| -s         | --threadPoolSize | number of threads for concurrent file uploads, default value:<br/>QuarkChain L2: `15`<br/> others: `6` |
+| -e         | --estimateGas    | estimate gas                                                                                           |
  <br/>
 
 

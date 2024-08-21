@@ -11,7 +11,6 @@ const {
   FlatDirectoryAbi,
   TYPE_CALLDATA,
   TYPE_BLOB,
-  SEPOLIA_CHAIN_ID,
   QUARKCHAIN_L2_TESTNET_CHAIN_ID,
   DEFAULT_THREAD_POOL_SIZE_LOW,
   DEFAULT_THREAD_POOL_SIZE_HIGH
@@ -241,7 +240,7 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
 
   if (threadPoolSize) {
     threadPoolSize = Number(threadPoolSize);
-  } else if (handler.chainId === SEPOLIA_CHAIN_ID || handler.chainId === QUARKCHAIN_L2_TESTNET_CHAIN_ID) {
+  } else if (handler.chainId === QUARKCHAIN_L2_TESTNET_CHAIN_ID) {
     threadPoolSize = DEFAULT_THREAD_POOL_SIZE_HIGH;
   } else {
     threadPoolSize = DEFAULT_THREAD_POOL_SIZE_LOW;
