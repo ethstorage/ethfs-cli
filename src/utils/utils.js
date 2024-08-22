@@ -54,7 +54,7 @@ async function getChainIdByRpc(rpc) {
 }
 
 // return address or eip3770 address
-async function getWebHandler(domain, rpc, chainId, defaultChainId) {
+async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) {
     // get web handler address, domain is address, xxx.ens, xxx.w3q
 
     // get chain id by short name
@@ -108,10 +108,11 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId) {
         return;
     }
 
+    const br = isBr ? "\n" : "";
     // address
     const ethAddrReg = /^0x[0-9a-fA-F]{40}$/;
     if (ethAddrReg.test(address)) {
-        console.log(`providerUrl = ${providerUrl}\nchainId = ${chainId}\naddress = ${address}\n`);
+        console.log(`providerUrl = ${providerUrl}\nchainId = ${chainId}\naddress = ${address} ${br}`);
         return {providerUrl, chainId, address};
     }
 
@@ -140,7 +141,7 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId) {
 
     // address
     if (ethAddrReg.test(webHandler)) {
-        console.log(`providerUrl = ${providerUrl}\nchainId = ${chainId}\naddress = ${address}\n`);
+        console.log(`providerUrl = ${providerUrl}\nchainId = ${chainId}\naddress = ${address} ${br}`);
         return {providerUrl, chainId, address: webHandler};
     }
     const short = webHandler.split(":");
@@ -154,7 +155,7 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId) {
     }
     const newChainId = NETWORK_MAPPING[shortName];
     providerUrl = chainId === newChainId ? providerUrl : PROVIDER_URLS[newChainId];
-    console.log(`providerUrl = ${providerUrl}\nchainId = ${newChainId}\naddress = ${shortAdd}\n`);
+    console.log(`providerUrl = ${providerUrl}\nchainId = ${chainId}\naddress = ${address} ${br}`);
     return {
         providerUrl: providerUrl,
         chainId: newChainId,

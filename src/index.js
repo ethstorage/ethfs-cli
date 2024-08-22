@@ -10,7 +10,10 @@ const {
   ETHEREUM_CHAIN_ID,
   FlatDirectoryAbi,
   TYPE_CALLDATA,
-  TYPE_BLOB
+  TYPE_BLOB,
+  QUARKCHAIN_L2_TESTNET_CHAIN_ID,
+  DEFAULT_THREAD_POOL_SIZE_LOW,
+  DEFAULT_THREAD_POOL_SIZE_HIGH
 } = require('./params');
 const {
   isPrivateKey,
@@ -229,11 +232,20 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
     }
   }
 
-  const handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
+  const handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT, false);
   if (!handler.providerUrl || parseInt(handler.address) <= 0) {
     console.log(error(`ERROR: ${domain} domain doesn't exist`));
     return;
   }
+
+  if (threadPoolSize) {
+    threadPoolSize = Number(threadPoolSize);
+  } else if (handler.chainId === QUARKCHAIN_L2_TESTNET_CHAIN_ID) {
+    threadPoolSize = DEFAULT_THREAD_POOL_SIZE_HIGH;
+  } else {
+    threadPoolSize = DEFAULT_THREAD_POOL_SIZE_LOW;
+  }
+  console.log(`threadPoolSize = ${threadPoolSize} \n`);
 
   // query total cost
   const uploader = await Uploader.create(key, handler.providerUrl, handler.chainId, handler.address, type);
@@ -293,26 +305,32 @@ const estimateCost = async (uploader, path, gasIncPct, threadPoolSize) => {
 }
 
 const upload = async (uploader, path, gasIncPct, threadPoolSize) => {
-  const infoArr = await uploader.upload(path, gasIncPct, threadPoolSize);
-  console.log();
-  let totalStorageCost = 0n, totalChunkCount = 0, totalDataSize = 0;
-  for (const file of infoArr) {
-    if (file.currentSuccessIndex >= 0) {
-      totalStorageCost += file.totalStorageCost;
-      totalChunkCount += file.totalUploadCount;
-      totalDataSize += file.totalUploadSize;
-      if (file.totalChunkCount > file.currentSuccessIndex + 1) {
-        console.log(error(`ERROR: ${file.fileName} uploaded failed. The chunkId is ${file.currentSuccessIndex + 1}`));
+  try {
+    const infoArr = await uploader.upload(path, gasIncPct, threadPoolSize);
+    console.log();
+    let totalStorageCost = 0n, totalChunkCount = 0, totalDataSize = 0;
+    for (const file of infoArr) {
+      if (file.currentSuccessIndex >= 0) {
+        totalStorageCost += file.totalStorageCost;
+        totalChunkCount += file.totalUploadCount;
+        totalDataSize += file.totalUploadSize;
+        if (file.totalChunkCount > file.currentSuccessIndex + 1) {
+          console.log(error(`ERROR: ${file.fileName} uploaded failed. The chunkId is ${file.currentSuccessIndex + 1}`));
+        }
+      } else {
+        console.log(error(`ERROR: ${file.fileName} uploaded failed.`));
       }
-    } else {
-      console.log(error(`ERROR: ${file.fileName} uploaded failed.`));
     }
-  }
 
-  console.log(notice(`Total File Count: ${infoArr.length}`));
-  console.log(notice(`Total Upload Chunk Count: ${totalChunkCount}`));
-  console.log(notice(`Total Upload Data Size: ${totalDataSize} KB`));
-  console.log(notice(`Total Storage Cost: ${ethers.formatEther(totalStorageCost)} ETH`));
+    console.log(notice(`Total File Count: ${infoArr.length}`));
+    console.log(notice(`Total Upload Chunk Count: ${totalChunkCount}`));
+    console.log(notice(`Total Upload Data Size: ${totalDataSize} KB`));
+    console.log(notice(`Total Storage Cost: ${ethers.formatEther(totalStorageCost)} ETH`));
+  } catch (e) {
+    const length = e.message.length;
+    console.log(length > 500 ? (e.message.substring(0, 245) + " ... " + e.message.substring(length - 245, length)) : e.message);
+    console.log(error(`ERROR: Execution failed. Please check the parameters and try again!`));
+  }
 };
 // **** function ****
 
