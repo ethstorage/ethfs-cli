@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-const { program } = require('commander');
-program.version(require('./package.json').version);
+import { program } from 'commander';
+import { version } from '../package.json';
+program.version(version);
 
-const { create, refund, upload, remove, setDefault, download } = require("./src");
+import { createDirectory, refund, estimateAndUpload, remove, setDefault, download } from './index';
 
 program
     .option('-p, --privateKey [privateKey]', 'private key')
@@ -23,7 +24,7 @@ program
     .option('-r, --rpc [rpc]', 'provider url')
     .action(() => {
         const opts = program.opts();
-        create(opts.privateKey, opts.chainId, opts.rpc);
+        createDirectory(opts.privateKey, opts.rpc, opts.chainId);
     });
 
 program
@@ -90,7 +91,7 @@ program
     .option('-s, --threadPoolSize [threadPoolSize]', 'thread pool size')
     .action(() => {
         const opts = program.opts();
-        upload(opts.privateKey, opts.address, opts.file, opts.type, opts.rpc, opts.chainId, opts.gasIncPct, opts.threadPoolSize, opts.estimateGas);
+        estimateAndUpload(opts.privateKey, opts.address, opts.file, opts.type, opts.rpc, opts.chainId, opts.gasIncPct, opts.threadPoolSize, opts.estimateGas);
     });
 
 program.parse(process.argv);

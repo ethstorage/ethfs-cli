@@ -1,59 +1,59 @@
-// short name
-const SHORT_NAME_GALILEO = "w3q-g";
-const SHORT_NAME_ETHEREUM = "eth";
-const SHORT_NAME_GOERLI = "gor";
-const SHORT_NAME_SEPOLIA = "sep";
-const SHORT_NAME_OPTIMISTIC = "oeth";
-const SHORT_NAME_ARBITRUM = "arb1";
-const SHORT_NAME_OPTIMISTIC_GOERLI = "ogor";
-const SHORT_NAME_ARBITRUM_GOERLI = "arb-goerli";
-const SHORT_NAME_EVMOS = "evmos";
-const SHORT_NAME_EVMOS_TEST = "evmos-testnet";
-const SHORT_NAME_ARBITRUM_NOVE = "arb-nova";
-const SHORT_NAME_BINANCE = "bnb";
-const SHORT_NAME_BINANCE_TEST = "bnbt";
-const SHORT_NAME_AVALANCHE = "avax";
-const SHORT_NAME_AVALANCHE_TEST = "fuji";
-const SHORT_NAME_FANTOM = "ftm";
-const SHORT_NAME_FANTOM_TEST = "tftm";
-const SHORT_NAME_HARMONY = "hmy-s0";
-const SHORT_NAME_HARMONY_TEST = "hmy-b-s0";
-const SHORT_NAME_POLYGON = "matic";
-const SHORT_NAME_POLYGON_MUMBAI = "maticmum";
-const SHORT_NAME_POLYGON_ZKEVM_TEST = "zkevmtest";
-const SHORT_NAME_QUARKCHAIN = "qkc-s0";
-const SHORT_NAME_QUARKCHAIN_DEVNET = "qkc-d-s0";
+// Short names
+export const SHORT_NAME_GALILEO = "w3q-g";
+export const SHORT_NAME_ETHEREUM = "eth";
+export const SHORT_NAME_GOERLI = "gor";
+export const SHORT_NAME_SEPOLIA = "sep";
+export const SHORT_NAME_OPTIMISTIC = "oeth";
+export const SHORT_NAME_ARBITRUM = "arb1";
+export const SHORT_NAME_OPTIMISTIC_GOERLI = "ogor";
+export const SHORT_NAME_ARBITRUM_GOERLI = "arb-goerli";
+export const SHORT_NAME_EVMOS = "evmos";
+export const SHORT_NAME_EVMOS_TEST = "evmos-testnet";
+export const SHORT_NAME_ARBITRUM_NOVE = "arb-nova";
+export const SHORT_NAME_BINANCE = "bnb";
+export const SHORT_NAME_BINANCE_TEST = "bnbt";
+export const SHORT_NAME_AVALANCHE = "avax";
+export const SHORT_NAME_AVALANCHE_TEST = "fuji";
+export const SHORT_NAME_FANTOM = "ftm";
+export const SHORT_NAME_FANTOM_TEST = "tftm";
+export const SHORT_NAME_HARMONY = "hmy-s0";
+export const SHORT_NAME_HARMONY_TEST = "hmy-b-s0";
+export const SHORT_NAME_POLYGON = "matic";
+export const SHORT_NAME_POLYGON_MUMBAI = "maticmum";
+export const SHORT_NAME_POLYGON_ZKEVM_TEST = "zkevmtest";
+export const SHORT_NAME_QUARKCHAIN = "qkc-s0";
+export const SHORT_NAME_QUARKCHAIN_DEVNET = "qkc-d-s0";
 
 
-// chain id
-const GALILEO_CHAIN_ID = 3334;
-const ETHEREUM_CHAIN_ID = 1;
-const GOERLI_CHAIN_ID = 5;
-const SEPOLIA_CHAIN_ID = 11155111;
-const OPTIMISTIC_CHAIN_ID = 10;
-const ARBITRUM_CHAIN_ID = 42161;
-const OPTIMISTIC_GOERLI_CHAIN_ID = 420;
-const ARBITRUM_GOERLI_CHAIN_ID = 421613;
-const EVMOS_CHAIN_ID = 9001;
-const EVMOS_TEST_CHAIN_ID = 9000;
-const ARBITRUM_NOVE_CHAIN_ID = 42170;
-const BINANCE_CHAIN_ID = 56;
-const BINANCE_TEST_CHAIN_ID = 97;
-const AVALANCHE_CHAIN_ID = 43114;
-const AVALANCHE_TEST_CHAIN_ID = 43113;
-const FANTOM_CHAIN_ID = 250;
-const FANTOM_TEST_CHAIN_ID = 4002;
-const HARMONY_CHAIN_ID = 1666600000;
-const HARMONY_TEST_CHAIN_ID = 1666700000;
-const POLYGON_CHAIN_ID = 137;
-const POLYGON_MUMBAI_CHAIN_ID = 80001;
-const POLYGON_ZKEVM_TEST_CHAIN_ID = 1402;
-const QUARKCHAIN_CHAIN_ID = 100001;
-const QUARKCHAIN_DEVNET_CHAIN_ID = 110001;
-const QUARKCHAIN_L2_DEVNET_CHAIN_ID = 42069;
-const QUARKCHAIN_L2_TESTNET_CHAIN_ID = 43069;
+// Chain IDs
+export const GALILEO_CHAIN_ID = 3334;
+export const ETHEREUM_CHAIN_ID = 1;
+export const GOERLI_CHAIN_ID = 5;
+export const SEPOLIA_CHAIN_ID = 11155111;
+export const OPTIMISTIC_CHAIN_ID = 10;
+export const ARBITRUM_CHAIN_ID = 42161;
+export const OPTIMISTIC_GOERLI_CHAIN_ID = 420;
+export const ARBITRUM_GOERLI_CHAIN_ID = 421613;
+export const EVMOS_CHAIN_ID = 9001;
+export const EVMOS_TEST_CHAIN_ID = 9000;
+export const ARBITRUM_NOVE_CHAIN_ID = 42170;
+export const BINANCE_CHAIN_ID = 56;
+export const BINANCE_TEST_CHAIN_ID = 97;
+export const AVALANCHE_CHAIN_ID = 43114;
+export const AVALANCHE_TEST_CHAIN_ID = 43113;
+export const FANTOM_CHAIN_ID = 250;
+export const FANTOM_TEST_CHAIN_ID = 4002;
+export const HARMONY_CHAIN_ID = 1666600000;
+export const HARMONY_TEST_CHAIN_ID = 1666700000;
+export const POLYGON_CHAIN_ID = 137;
+export const POLYGON_MUMBAI_CHAIN_ID = 80001;
+export const POLYGON_ZKEVM_TEST_CHAIN_ID = 1402;
+export const QUARKCHAIN_CHAIN_ID = 100001;
+export const QUARKCHAIN_DEVNET_CHAIN_ID = 110001;
+export const QUARKCHAIN_L2_DEVNET_CHAIN_ID = 42069;
+export const QUARKCHAIN_L2_TESTNET_CHAIN_ID = 43069;
 
-const NETWORK_MAPPING = {
+export const NETWORK_MAPPING: { [key: string]: number } = {
     [SHORT_NAME_GALILEO]: GALILEO_CHAIN_ID,
     [SHORT_NAME_ETHEREUM]: ETHEREUM_CHAIN_ID,
     [SHORT_NAME_GOERLI]: GOERLI_CHAIN_ID,
@@ -78,9 +78,9 @@ const NETWORK_MAPPING = {
     [SHORT_NAME_POLYGON_ZKEVM_TEST]: POLYGON_ZKEVM_TEST_CHAIN_ID,
     [SHORT_NAME_QUARKCHAIN]: QUARKCHAIN_CHAIN_ID,
     [SHORT_NAME_QUARKCHAIN_DEVNET]: QUARKCHAIN_DEVNET_CHAIN_ID,
-}
+};
 
-const PROVIDER_URLS = {
+export const PROVIDER_URLS: { [key: number]: string } = {
     [GALILEO_CHAIN_ID]: 'https://galileo.web3q.io:8545',
     [ETHEREUM_CHAIN_ID]: 'https://ethereum.publicnode.com',
     [GOERLI_CHAIN_ID]: 'https://rpc.ankr.com/eth_goerli',
@@ -106,49 +106,26 @@ const PROVIDER_URLS = {
     [QUARKCHAIN_CHAIN_ID]: 'https://mainnet-s0-ethapi.quarkchain.io',
     [QUARKCHAIN_DEVNET_CHAIN_ID]: 'https://devnet-s0-ethapi.quarkchain.io',
     [QUARKCHAIN_L2_DEVNET_CHAIN_ID]: 'http://142.132.154.16:8545',
-    [QUARKCHAIN_L2_TESTNET_CHAIN_ID]: 'https://rpc.testnet.l2.quarkchain.io:8545',
-}
+    [QUARKCHAIN_L2_TESTNET_CHAIN_ID]: 'https://rpc.testnet.l2.quarkchain.io:9545',
+};
 
-const NS_ADDRESS = {
+export const NS_ADDRESS: { [key: number]: string } = {
     [GALILEO_CHAIN_ID]: '0xD379B91ac6a93AF106802EB076d16A54E3519CED',
     [ETHEREUM_CHAIN_ID]: '0x00000000000c2e074ec69a0dfb2997ba6c7d2e1e',
     [GOERLI_CHAIN_ID]: '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e',
-}
+};
 
-// eip-4844
-const ETH_STORAGE_ADDRESS = {
-    [SEPOLIA_CHAIN_ID]: '0x804C520d3c084C805E37A35E90057Ac32831F96f',
-    [QUARKCHAIN_L2_DEVNET_CHAIN_ID]: '0x90a708C0dca081ca48a9851a8A326775155f87Fd',
-    [QUARKCHAIN_L2_TESTNET_CHAIN_ID]: '0x64003adbdf3014f7E38FC6BE752EB047b95da89A',
-}
-const ETH_STORAGE_RPC = {
+// EIP-4844 related constants
+export const ETH_STORAGE_RPC: { [key: number]: string } = {
     [SEPOLIA_CHAIN_ID]: 'http://65.108.236.27:9540',
     [QUARKCHAIN_L2_DEVNET_CHAIN_ID]: 'http://65.108.230.142:9545',
     [QUARKCHAIN_L2_TESTNET_CHAIN_ID]: 'http://65.109.115.36:9540',
 }
 
-const TYPE_CALLDATA = 'calldata';
-const TYPE_BLOB = 'blob';
-
-const DEFAULT_THREAD_POOL_SIZE_LOW = 6;
-const DEFAULT_THREAD_POOL_SIZE_HIGH = 15;
-
-module.exports = {
-    NETWORK_MAPPING,
-    PROVIDER_URLS,
-    NS_ADDRESS,
-    ETH_STORAGE_ADDRESS,
-    ETH_STORAGE_RPC,
-
-    GALILEO_CHAIN_ID,
-    ARBITRUM_NOVE_CHAIN_ID,
-    ETHEREUM_CHAIN_ID,
-    SEPOLIA_CHAIN_ID,
-    QUARKCHAIN_L2_TESTNET_CHAIN_ID,
-
-    TYPE_CALLDATA,
-    TYPE_BLOB,
-
-    DEFAULT_THREAD_POOL_SIZE_LOW,
-    DEFAULT_THREAD_POOL_SIZE_HIGH
+export enum UploadTypeStr {
+    CALLDATA = 'calldata',
+    BLOB = 'blob'
 }
+
+export const DEFAULT_THREAD_POOL_SIZE_LOW = 6;
+export const DEFAULT_THREAD_POOL_SIZE_HIGH = 15;
