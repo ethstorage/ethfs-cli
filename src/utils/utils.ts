@@ -1,66 +1,57 @@
-const fs = require("fs");
-const {ethers} = require("ethers");
-const {normalize} = require("eth-ens-namehash");
-const {keccak_256: sha3} = require("js-sha3");
-const {
+import * as fs from 'fs';
+import { ethers } from 'ethers';
+import { namehash } from 'eth-ens-namehash';
+import {
     NETWORK_MAPPING,
     PROVIDER_URLS,
     NS_ADDRESS,
     GALILEO_CHAIN_ID,
 
     NSAbi,
-    ResolverAbi,
-} = require('../params');
+    ResolverAbi
+} from '../params';
+import {
+    WebHandlerResult,
+    FilePool,
+    Nullable
+} from "../types/types";
 
-const color = require('colors-cli/safe')
+import color from 'colors-cli/safe';
 const error = color.red.bold;
 
-function isPrivateKey(key) {
+export function isPrivateKey(key: any): boolean {
     try {
-        if (typeof (key) === "string" && !key.startsWith("0x")) {
-            key = "0x" + key;
+        if (typeof (key) === 'string' && !key.startsWith('0x')) {
+            key = '0x' + key;
         }
         return ethers.isHexString(key, 32);
-    } catch (error) {
+    } catch {
         return false;
     }
 }
 
-function namehash(inputName) {
-    let node = ''
-    for (let i = 0; i < 32; i++) {
-        node += '00'
-    }
-
-    if (inputName) {
-        const labels = inputName.split('.');
-        for (let i = labels.length - 1; i >= 0; i--) {
-            let normalisedLabel = normalize(labels[i])
-            let labelSha = sha3(normalisedLabel)
-            node = sha3(Buffer.from(node + labelSha, 'hex'))
-        }
-    }
-
-    return '0x' + node
-}
-
-async function getChainIdByRpc(rpc) {
+export async function getChainIdByRpc(rpc: Nullable<string>): Promise<number | undefined> {
     if (!rpc) {
-        return;
+        return undefined;
     }
     const provider = new ethers.JsonRpcProvider(rpc);
     const network = await provider.getNetwork();
     return Number(network.chainId);
 }
 
-// return address or eip3770 address
-async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) {
+export async function getWebHandler(
+    domain: string,
+    rpc: Nullable<string>,
+    chainId: Nullable<number>,
+    defaultChainId: number,
+    isBr = true
+): Promise<WebHandlerResult | undefined> {
     // get web handler address, domain is address, xxx.ens, xxx.w3q
 
     // get chain id by short name
-    let snChainId;
-    let address;
-    const domains = domain.split(":");
+    let snChainId: number | undefined;
+    let address: string;
+    const domains = domain.split(':');
     if (domains.length > 1) {
         snChainId = NETWORK_MAPPING[domains[0]];
         if (!snChainId) {
@@ -96,7 +87,7 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) 
         chainId = rpcChainId;
     } else {
         chainId = defaultChainId;
-        if (address.endsWith(".w3q")) {
+        if (address.endsWith('.w3q')) {
             chainId = GALILEO_CHAIN_ID;
         }
     }
@@ -108,33 +99,32 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) 
         return;
     }
 
-    const br = isBr ? "\n" : "";
-    // address
+    const br = isBr ? '\n' : '';
     const ethAddrReg = /^0x[0-9a-fA-F]{40}$/;
     if (ethAddrReg.test(address)) {
         console.log(`providerUrl = ${providerUrl}\nchainId = ${chainId}\naddress = ${address} ${br}`);
-        return {providerUrl, chainId, address};
+        return { providerUrl, chainId, address };
     }
 
     // .w3q or .eth domain
-    let nameServiceContract = NS_ADDRESS[chainId];
+    const nameServiceContract = NS_ADDRESS[chainId];
     if (!nameServiceContract) {
         console.log(error(`Not Support Name Service: ${domain}`));
         return;
     }
-    let webHandler;
+    let webHandler: string;
     const provider = new ethers.JsonRpcProvider(providerUrl);
     try {
         const nameHash = namehash(address);
-        const nsContract = new ethers.Contract(nameServiceContract, NSAbi, provider);
+        const nsContract = new ethers.Contract(nameServiceContract, NSAbi, provider) as any;
         const resolver = await nsContract.resolver(nameHash);
-        const resolverContract = new ethers.Contract(resolver, ResolverAbi, provider);
+        const resolverContract = new ethers.Contract(resolver, ResolverAbi, provider) as any;
         if (chainId === GALILEO_CHAIN_ID) {
             webHandler = await resolverContract.webHandler(nameHash);
         } else {
-            webHandler = await resolverContract.text(nameHash, "contentcontract");
+            webHandler = await resolverContract.text(nameHash, 'contentcontract');
         }
-    } catch (e) {
+    } catch {
         console.log(error(`Not Support Domain: ${domain}`));
         return;
     }
@@ -142,10 +132,10 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) 
     // address
     if (ethAddrReg.test(webHandler)) {
         console.log(`providerUrl = ${providerUrl}\nchainId = ${chainId}\naddress = ${address} ${br}`);
-        return {providerUrl, chainId, address: webHandler};
+        return { providerUrl, chainId, address: webHandler };
     }
-    const short = webHandler.split(":");
-    let shortAdd, shortName;
+    const short = webHandler.split(':');
+    let shortAdd: string, shortName: string;
     if (short.length > 1) {
         shortName = domains[0];
         shortAdd = domains[1];
@@ -159,29 +149,42 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) 
     return {
         providerUrl: providerUrl,
         chainId: newChainId,
-        address: shortAdd
+        address: shortAdd,
     };
 }
 
-async function checkBalance(provider, domainAddr, accountAddr) {
-    return Promise.all([
-        provider.getBalance(domainAddr),
-        provider.getBalance(accountAddr)
-    ]).then(values => {
+export async function checkBalance(
+    provider: ethers.JsonRpcProvider,
+    domainAddr: string,
+    accountAddr: string
+): Promise<{ domainBalance: bigint, accountBalance: bigint }> {
+    try {
+        const [domainBalance, accountBalance] = await Promise.all([
+            provider.getBalance(domainAddr),
+            provider.getBalance(accountAddr),
+        ]);
         return {
-            domainBalance: values[0],
-            accountBalance: values[1]
+            domainBalance,
+            accountBalance,
         };
-    }, reason => {
-        console.log(reason);
-    });
+    } catch (error) {
+        console.error(error);
+        return {
+            domainBalance: 0n,
+            accountBalance: 0n,
+        };
+    }
 }
 
-function recursiveFiles(path, basePath) {
-    let filePools = [];
+export function recursiveFiles(path: string, basePath: string): FilePool[] {
+    let filePools: FilePool[] = [];
     const fileStat = fs.statSync(path);
     if (fileStat.isFile()) {
-        filePools.push({path: path, name: path.substring(path.lastIndexOf("/") + 1), size: fileStat.size});
+        filePools.push({
+            path: path,
+            name: path.substring(path.lastIndexOf('/') + 1),
+            size: fileStat.size,
+        });
         return filePools;
     }
 
@@ -192,16 +195,12 @@ function recursiveFiles(path, basePath) {
             const pools = recursiveFiles(`${path}/${file}`, `${basePath}${file}/`);
             filePools = filePools.concat(pools);
         } else {
-            filePools.push({path: `${path}/${file}`, name: `${basePath}${file}`, size: fileStat.size});
+            filePools.push({
+                path: `${path}/${file}`,
+                name: `${basePath}${file}`,
+                size: fileStat.size,
+            });
         }
     }
     return filePools;
-}
-
-module.exports = {
-    isPrivateKey,
-    getChainIdByRpc,
-    getWebHandler,
-    checkBalance,
-    recursiveFiles
 }
