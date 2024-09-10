@@ -5,6 +5,7 @@
   "main": "src/cli.js",
   "scripts": {
     "preinstall": "node install.js",
+    "prepublish": "npm run build",
     "build": "rm -rf dist && tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
