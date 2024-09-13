@@ -1,13 +1,12 @@
-const {ethers} = require("ethers");
-const {from, mergeMap} = require('rxjs');
+const { from, mergeMap, bufferCount } = require('rxjs');
 const {
     FlatDirectory,
     UPLOAD_TYPE_BLOB,
-    UPLOAD_TYPE_CALLDATA
+    UPLOAD_TYPE_CALLDATA,
+    MAX_CHUNKS
 } = require("ethstorage-sdk");
 const {NodeFile} = require("ethstorage-sdk/file");
 
-const { FlatDirectoryAbi } = require('../params');
 const {
     recursiveFiles
 } = require('./utils');
@@ -30,52 +29,45 @@ class Uploader {
     #uploadType;
 
     static async create(pk, rpc, chainId, contractAddress, uploadType) {
-        const uploader = new Uploader(chainId);
-        const status = await uploader.#init(pk, rpc, contractAddress, uploadType);
+        const uploader = new Uploader();
+        const status = await uploader.#init(pk, rpc, chainId, contractAddress, uploadType);
         if (status) {
             return uploader;
         }
         return null;
     }
 
-    constructor(chainId) {
+    async #init(pk, rpc, chainId, contractAddress, uploadType) {
         this.#chainId = chainId;
-    }
-
-    async #init(pk, rpc, contractAddress, uploadType) {
-        const status = await this.#initType(rpc, contractAddress, uploadType);
-        if (!status) {
-            return false;
-        }
-
-        this.#flatDirectory = await FlatDirectory.create({
-            rpc: rpc, privateKey: pk, address: contractAddress
-        });
-        return true;
-    }
-
-    async #initType(rpc, contractAddress, uploadType) {
-        const provider = new ethers.JsonRpcProvider(rpc);
-        const fileContract = new ethers.Contract(contractAddress, FlatDirectoryAbi, provider);
-        let isSupportBlob;
         try {
-            isSupportBlob = await fileContract.isSupportBlob();
+            this.#flatDirectory = await FlatDirectory.create({
+                rpc: rpc, privateKey: pk, address: contractAddress
+            });
         } catch (e) {
-            console.log(`ERROR: Init upload type fail.`, e.message);
+            console.log(e.message);
             return false;
         }
 
         if (uploadType) {
             // check upload type
-            if (!isSupportBlob && Number(uploadType) === UPLOAD_TYPE_BLOB) {
+            if (!this.#flatDirectory.isSupportBlob() && Number(uploadType) === UPLOAD_TYPE_BLOB) {
                 console.log(`ERROR: The current network does not support this upload type, please switch to another type. Type=${uploadType}`);
                 return false;
             }
             this.#uploadType = Number(uploadType);
         } else {
-            this.#uploadType = isSupportBlob ? UPLOAD_TYPE_BLOB : UPLOAD_TYPE_CALLDATA;
+            this.#uploadType = this.#flatDirectory.isSupportBlob() ? UPLOAD_TYPE_BLOB : UPLOAD_TYPE_CALLDATA;
         }
         return true;
+    }
+
+    async #fetchFileDataBatch(fileBatch) {
+        const keys = fileBatch.map(file => file.name);
+        const fileHashArr = await this.#flatDirectory.fetchHashes(keys);
+        return fileBatch.map(file => {
+            file.chunkHashes = fileHashArr[file.name];
+            return file;
+        })
     }
 
     // estimate cost
@@ -87,7 +79,12 @@ class Uploader {
         const files = recursiveFiles(path, '');
         return new Promise((resolve, reject) => {
             from(files)
-                .pipe(mergeMap(info => this.#estimate(info, gasIncPct), threadPoolSize))
+                .pipe(
+                    bufferCount(MAX_CHUNKS),
+                    mergeMap(fileBatch => this.#fetchFileDataBatch(fileBatch), threadPoolSize),
+                    mergeMap(files => from(files)),
+                    mergeMap(file => this.#estimate(file, gasIncPct), threadPoolSize)
+                )
                 .subscribe({
                     next: (cost) => {
                         totalFileCount++;
@@ -109,11 +106,12 @@ class Uploader {
 
     async #estimate(fileInfo, gasIncPct) {
         try {
-            const {path, name} = fileInfo;
+            const {path, name, chunkHashes} = fileInfo;
             const file = new NodeFile(path);
             return await this.#flatDirectory.estimateCost({
                 key: name,
                 content: file,
+                chunkHashes: chunkHashes,
                 type: this.#uploadType,
                 gasIncPct: gasIncPct
             });
@@ -128,7 +126,12 @@ class Uploader {
         const results = [];
         return new Promise((resolve, reject) => {
             from(recursiveFiles(path, ''))
-                .pipe(mergeMap(info => this.#upload(info, gasIncPct), threadPoolSize))
+                .pipe(
+                    bufferCount(MAX_CHUNKS),
+                    mergeMap(fileBatch => this.#fetchFileDataBatch(fileBatch), threadPoolSize),
+                    mergeMap(files => from(files)),
+                    mergeMap(file => this.#upload(file, gasIncPct), threadPoolSize)
+                )
                 .subscribe({
                     next: (info) => { results.push(info); },
                     error: (error) => { reject(error); },
@@ -138,7 +141,7 @@ class Uploader {
     }
 
     async #upload(fileInfo, gasIncPct) {
-        const {path, name} = fileInfo;
+        const {path, name, chunkHashes} = fileInfo;
 
         let totalChunkCount = 0;
         let currentSuccessIndex = -1;
@@ -175,6 +178,7 @@ class Uploader {
         await this.#flatDirectory.upload({
             key: name,
             content: file,
+            chunkHashes: chunkHashes,
             type: this.#uploadType,
             gasIncPct: gasIncPct,
             callback: callback
