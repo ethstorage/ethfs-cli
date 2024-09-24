@@ -1,8 +1,9 @@
-const { from, mergeMap, bufferCount } = require('rxjs');
+const { from, mergeMap, map, scan, filter } = require('rxjs');
 const {
     FlatDirectory,
     UPLOAD_TYPE_BLOB,
     UPLOAD_TYPE_CALLDATA,
+    OP_BLOB_DATA_SIZE,
     MAX_CHUNKS
 } = require("ethstorage-sdk");
 const {NodeFile} = require("ethstorage-sdk/file");
@@ -21,6 +22,8 @@ class UploadError extends Error {
         this.value = value;
     }
 }
+
+const GALILEO_CHAIN_ID = 3334;
 
 class Uploader {
     #chainId;
@@ -70,6 +73,25 @@ class Uploader {
         })
     }
 
+    #getFileChunkCount(fileSize) {
+        if (this.#uploadType === UPLOAD_TYPE_BLOB) {
+            return Math.ceil(fileSize / OP_BLOB_DATA_SIZE);
+        } else {
+            if (GALILEO_CHAIN_ID === this.#chainId) {
+                if (fileSize > 475 * 1024) {
+                    // Data need to be sliced if file > 475K
+                    return Math.ceil(fileSize / (475 * 1024));
+                }
+            } else {
+                if (fileSize > 24 * 1024 - 326) {
+                    // Data need to be sliced if file > 24K
+                    return Math.ceil(fileSize / (24 * 1024 - 326));
+                }
+            }
+            return 1;
+        }
+    }
+
     // estimate cost
     async estimateCost(spin, path, gasIncPct, threadPoolSize) {
         let totalFileCount = 0;
@@ -80,7 +102,20 @@ class Uploader {
         return new Promise((resolve, reject) => {
             from(files)
                 .pipe(
-                    bufferCount(MAX_CHUNKS),
+                    // Group
+                    scan((acc, file) => {
+                        const files = [...acc.files, file];
+                        const totalChunks = acc.totalChunks + this.#getFileChunkCount(file.size);
+
+                        if (totalChunks >= MAX_CHUNKS) {
+                            return { files: [], totalChunks: 0, reset: true, batch: files };
+                        }
+                        return { files, totalChunks, reset: false };
+                    }, { files: [], totalChunks: 0 }),
+                    filter(acc => acc.reset === true),
+                    map(acc => acc.batch),
+
+                    // Execution
                     mergeMap(fileBatch => this.#fetchFileDataBatch(fileBatch), threadPoolSize),
                     mergeMap(files => from(files)),
                     mergeMap(file => this.#estimate(file, gasIncPct), threadPoolSize)
@@ -127,7 +162,20 @@ class Uploader {
         return new Promise((resolve, reject) => {
             from(recursiveFiles(path, ''))
                 .pipe(
-                    bufferCount(MAX_CHUNKS),
+                    // Group
+                    scan((acc, file) => {
+                        const files = [...acc.files, file];
+                        const totalChunks = acc.totalChunks + this.#getFileChunkCount(file.size);
+
+                        if (totalChunks >= MAX_CHUNKS) {
+                            return { files: [], totalChunks: 0, reset: true, batch: files };
+                        }
+                        return { files, totalChunks, reset: false };
+                    }, { files: [], totalChunks: 0 }),
+                    filter(acc => acc.reset === true),
+                    map(acc => acc.batch),
+
+                    // Execution
                     mergeMap(fileBatch => this.#fetchFileDataBatch(fileBatch), threadPoolSize),
                     mergeMap(files => from(files)),
                     mergeMap(file => this.#upload(file, gasIncPct), threadPoolSize)
