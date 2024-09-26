@@ -92,30 +92,33 @@ class Uploader {
         }
     }
 
+    #groupFiles(files) {
+        return from(files).pipe(
+            scan((acc, file) => {
+                const newFiles = [...acc.files, file];
+                const totalChunks = acc.totalChunks + this.#getFileChunkCount(file.size);
+                const totalFileCount = acc.totalFileCount + 1;
+
+                if (totalChunks >= MAX_CHUNKS || totalFileCount === files.length) {
+                    return { files: [], totalChunks: 0, totalFileCount, batch: newFiles };
+                }
+                return { files: newFiles, totalChunks, totalFileCount, batch: [] };
+            }, { files: [], totalChunks: 0, totalFileCount: 0, batch: [] }),
+            filter(acc => acc.batch.length > 0),
+            map(acc => acc.batch)
+        );
+    }
+
     // estimate cost
     async estimateCost(spin, path, gasIncPct, threadPoolSize) {
         let totalFileCount = 0;
         let totalStorageCost = 0n;
         let totalGasCost = 0n;
-
+        // Execution
         const files = recursiveFiles(path, '');
         return new Promise((resolve, reject) => {
-            from(files)
+            this.#groupFiles(files)
                 .pipe(
-                    // Group
-                    scan((acc, file) => {
-                        const files = [...acc.files, file];
-                        const totalChunks = acc.totalChunks + this.#getFileChunkCount(file.size);
-
-                        if (totalChunks >= MAX_CHUNKS) {
-                            return { files: [], totalChunks: 0, reset: true, batch: files };
-                        }
-                        return { files, totalChunks, reset: false };
-                    }, { files: [], totalChunks: 0 }),
-                    filter(acc => acc.reset === true),
-                    map(acc => acc.batch),
-
-                    // Execution
                     mergeMap(fileBatch => this.#fetchFileDataBatch(fileBatch), threadPoolSize),
                     mergeMap(files => from(files)),
                     mergeMap(file => this.#estimate(file, gasIncPct), threadPoolSize)
@@ -159,23 +162,11 @@ class Uploader {
     // upload
     async upload(path, gasIncPct, threadPoolSize) {
         const results = [];
+        // Execution
+        const files = recursiveFiles(path, '');
         return new Promise((resolve, reject) => {
-            from(recursiveFiles(path, ''))
+            this.#groupFiles(files)
                 .pipe(
-                    // Group
-                    scan((acc, file) => {
-                        const files = [...acc.files, file];
-                        const totalChunks = acc.totalChunks + this.#getFileChunkCount(file.size);
-
-                        if (totalChunks >= MAX_CHUNKS) {
-                            return { files: [], totalChunks: 0, reset: true, batch: files };
-                        }
-                        return { files, totalChunks, reset: false };
-                    }, { files: [], totalChunks: 0 }),
-                    filter(acc => acc.reset === true),
-                    map(acc => acc.batch),
-
-                    // Execution
                     mergeMap(fileBatch => this.#fetchFileDataBatch(fileBatch), threadPoolSize),
                     mergeMap(files => from(files)),
                     mergeMap(file => this.#upload(file, gasIncPct), threadPoolSize)
