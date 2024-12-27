@@ -51,7 +51,7 @@ const POLYGON_ZKEVM_TEST_CHAIN_ID = 1402;
 const QUARKCHAIN_CHAIN_ID = 100001;
 const QUARKCHAIN_DEVNET_CHAIN_ID = 110001;
 const QUARKCHAIN_L2_DEVNET_CHAIN_ID = 42069;
-const QUARKCHAIN_L2_TESTNET_CHAIN_ID = 43069;
+const QUARKCHAIN_L2_TESTNET_CHAIN_ID = 3335;
 
 const NETWORK_MAPPING = {
     [SHORT_NAME_GALILEO]: GALILEO_CHAIN_ID,
@@ -106,7 +106,7 @@ const PROVIDER_URLS = {
     [QUARKCHAIN_CHAIN_ID]: 'https://mainnet-s0-ethapi.quarkchain.io',
     [QUARKCHAIN_DEVNET_CHAIN_ID]: 'https://devnet-s0-ethapi.quarkchain.io',
     [QUARKCHAIN_L2_DEVNET_CHAIN_ID]: 'http://142.132.154.16:8545',
-    [QUARKCHAIN_L2_TESTNET_CHAIN_ID]: 'https://rpc.testnet.l2.quarkchain.io:8545',
+    [QUARKCHAIN_L2_TESTNET_CHAIN_ID]: 'https://rpc.beta.testnet.l2.quarkchain.io:8545',
 }
 
 const NS_ADDRESS = {
@@ -124,7 +124,7 @@ const ETH_STORAGE_ADDRESS = {
 const ETH_STORAGE_RPC = {
     [SEPOLIA_CHAIN_ID]: 'http://65.108.236.27:9540',
     [QUARKCHAIN_L2_DEVNET_CHAIN_ID]: 'http://65.108.230.142:9545',
-    [QUARKCHAIN_L2_TESTNET_CHAIN_ID]: 'http://65.109.115.36:9540',
+    [QUARKCHAIN_L2_TESTNET_CHAIN_ID]: 'http://65.109.115.36:9596',
 }
 
 const TYPE_CALLDATA = 'calldata';
