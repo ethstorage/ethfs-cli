@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const ora = require("ora");
 const readline = require('readline');
-const { FlatDirectory, UPLOAD_TYPE_CALLDATA, UPLOAD_TYPE_BLOB} = require("ethstorage-sdk");
+const { FlatDirectory, UploadType} = require("ethstorage-sdk");
 const { ethers } = require("ethers");
 const {
   PROVIDER_URLS,
@@ -20,7 +20,9 @@ const {
   checkBalance,
   getChainIdByRpc,
   getWebHandler,
-  Uploader
+  Uploader,
+  ERROR_TYPE_VERSION,
+  ERROR_TYPE_OTHER
 } = require('./utils');
 
 const color = require('colors-cli/safe')
@@ -222,11 +224,12 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
     return;
   }
   if (type) {
-    if(type === TYPE_CALLDATA) {
-      type = UPLOAD_TYPE_CALLDATA;
-    } else if(type === TYPE_BLOB) {
-      type = UPLOAD_TYPE_BLOB;
-    } else if (Number(type) !== UPLOAD_TYPE_CALLDATA && Number(type) !== UPLOAD_TYPE_BLOB) {
+    const numericType = Number(type);
+    if (numericType === UploadType.Calldata || type === TYPE_CALLDATA) {
+      type = UploadType.Calldata;
+    } else if (numericType === UploadType.Blob || type === TYPE_BLOB) {
+      type = UploadType.Blob;
+    } else {
       console.error(error(`ERROR: invalid upload type!`));
       return;
     }
@@ -234,7 +237,7 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
 
   const handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT, false);
   if (!handler.providerUrl || parseInt(handler.address) <= 0) {
-    console.log(error(`ERROR: ${domain} domain doesn't exist`));
+    console.error(error(`ERROR: ${domain} domain doesn't exist`));
     return;
   }
 
@@ -249,8 +252,19 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
 
   // query total cost
   const uploader = await Uploader.create(key, handler.providerUrl, handler.chainId, handler.address, type);
-  if (!uploader) {
-    console.log(error(`ERROR: Failed to initialize the SDK, please check the parameters and network and try again.`));
+  if (uploader?.errorType) {
+    switch (uploader.errorType) {
+      case ERROR_TYPE_VERSION:
+        console.error(error('❌ ERROR: Contract version is too low. Please install an older version of the CLI tool to proceed.'));
+        break;
+      case ERROR_TYPE_OTHER:
+        console.info(notice(`⚠️ WARNING: SDK initialization failed: ${result.errorMessage}`));
+        console.error(error('❌ ERROR: Please check your parameters and network connection, then try again.'));
+        break;
+      default:
+        console.error(error('❌ ERROR: An unknown error occurred. Please contact technical support.'));
+        break;
+    }
     return;
   }
 
