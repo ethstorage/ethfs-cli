@@ -133,6 +133,11 @@ const TYPE_BLOB = 'blob';
 const DEFAULT_THREAD_POOL_SIZE_LOW = 6;
 const DEFAULT_THREAD_POOL_SIZE_HIGH = 15;
 
+const LOG_ERROR = 0;
+const LOG_WARNING = 1;
+const LOG_INFO = 2;
+const LOG_SUCCESS = 3;
+
 module.exports = {
     NETWORK_MAPPING,
     PROVIDER_URLS,
@@ -150,5 +155,10 @@ module.exports = {
     TYPE_BLOB,
 
     DEFAULT_THREAD_POOL_SIZE_LOW,
-    DEFAULT_THREAD_POOL_SIZE_HIGH
+    DEFAULT_THREAD_POOL_SIZE_HIGH,
+
+    LOG_ERROR,
+    LOG_WARNING,
+    LOG_INFO,
+    LOG_SUCCESS
 }

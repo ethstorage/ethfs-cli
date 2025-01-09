@@ -50,7 +50,7 @@ class Uploader {
                 rpc: rpc, privateKey: pk, address: contractAddress
             });
         } catch (e) {
-            if (e.message.includes('The current SDK does not support this contract. Please switch to version 2.0.0')) {
+            if (e.message.includes('The current SDK does not support this contract')) {
                 this.#errorType = ERROR_TYPE_VERSION;
             } else {
                 this.#errorType = ERROR_TYPE_OTHER;
