@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const ora = require("ora");
 const readline = require('readline');
-const { FlatDirectory, UPLOAD_TYPE_CALLDATA, UPLOAD_TYPE_BLOB} = require("ethstorage-sdk");
+const { FlatDirectory, UploadType} = require("ethstorage-sdk");
 const { ethers } = require("ethers");
 const {
   PROVIDER_URLS,
@@ -28,7 +28,7 @@ const error = color.red.bold;
 
 const CHAIN_ID_DEFAULT = ETHEREUM_CHAIN_ID;
 
-// **** function ****
+// **** external function ****
 const createDirectory = async (key, chainId, rpc) => {
   if (!isPrivateKey(key)) {
     Logger.error("Invalid private key.");
@@ -79,13 +79,13 @@ const setDefault = async (key, domain, filename, rpc, chainId) => {
     return;
   }
 
-  const {providerUrl, address} = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
-  if (providerUrl && parseInt(address) > 0) {
-    const fd = await FlatDirectory.create({
-      rpc: providerUrl,
-      privateKey: key,
-      address: address
-    });
+  const handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
+  if (handler?.providerUrl && parseInt(handler?.address) > 0) {
+    const {providerUrl, address} = handler;
+    const fd = await createSDK(providerUrl, key, address);
+    if (!fd) {
+      return;
+    }
     const status = await fd.setDefault(filename);
     if (status) {
       Logger.success("Default file set successfully.");
@@ -109,18 +109,18 @@ const remove = async (key, domain, fileName, rpc, chainId) => {
     return;
   }
 
-  const { providerUrl, address } = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
-  if (providerUrl && parseInt(address) > 0) {
+  const handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
+  if (handler?.providerUrl && parseInt(handler?.address) > 0) {
+    const { providerUrl, address } = handler;
     Logger.info(`Removing file: ${fileName}`);
     const provider = new ethers.JsonRpcProvider(providerUrl);
     const wallet = new ethers.Wallet(key, provider);
     const prevInfo = await checkBalance(provider, address, wallet.address);
 
-    const fd = await FlatDirectory.create({
-      rpc: providerUrl,
-      privateKey: key,
-      address: address
-    });
+    const fd = await createSDK(providerUrl, key, address);
+    if (!fd) {
+      return;
+    }
     const status = await fd.remove(fileName);
     if (status) {
       Logger.success("File removed successfully.");
@@ -146,7 +146,7 @@ const download = async (domain, fileName, rpc, chainId) => {
   }
 
   const handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
-  if (parseInt(handler.address) > 0) {
+  if (parseInt(handler?.address) > 0) {
     const savePath = path.join(process.cwd(), fileName);
     if (!fs.existsSync(path.dirname(savePath))) {
       fs.mkdirSync(path.dirname(savePath));
@@ -155,12 +155,10 @@ const download = async (domain, fileName, rpc, chainId) => {
     // replace rpc to eth storage
     const esRpc = ETH_STORAGE_RPC[handler.chainId];
     const ethStorageRpc = esRpc || handler.providerUrl;
-    const fd = await FlatDirectory.create({
-      rpc: handler.providerUrl,
-      ethStorageRpc: ethStorageRpc,
-      privateKey: ethers.hexlify(ethers.randomBytes(32)),
-      address: handler.address,
-    });
+    const fd = await createSDK(handler.providerUrl, ethers.hexlify(ethers.randomBytes(32)), handler.address, ethStorageRpc);
+    if (!fd) {
+      return;
+    }
     await fd.download(fileName, {
       onProgress: (progress, count, chunk) => {
         fs.appendFileSync(savePath, chunk);
@@ -196,11 +194,12 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
     return;
   }
   if (type) {
-    if (type === TYPE_CALLDATA) {
-      type = UPLOAD_TYPE_CALLDATA;
-    } else if (type === TYPE_BLOB) {
-      type = UPLOAD_TYPE_BLOB;
-    } else if (Number(type) !== UPLOAD_TYPE_CALLDATA && Number(type) !== UPLOAD_TYPE_BLOB) {
+    const numericType = Number(type);
+    if (numericType === UploadType.Calldata || type === TYPE_CALLDATA) {
+      type = UploadType.Calldata;
+    } else if (numericType === UploadType.Blob || type === TYPE_BLOB) {
+      type = UploadType.Blob;
+    } else {
       Logger.error("Invalid upload type.");
       return;
     }
@@ -242,6 +241,26 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
     await upload(uploader, path, gasIncPct, threadPoolSize);
   }
   process.exit(0);
+}
+// **** external function ****
+
+// **** internal function ****
+const createSDK = async (rpc, privateKey, address, ethStorageRpc) => {
+  try {
+    return await FlatDirectory.create({
+      rpc: rpc,
+      ethStorageRpc: ethStorageRpc,
+      privateKey: privateKey,
+      address: address,
+    });
+  } catch (e) {
+    if (e.message.includes('The current SDK does not support this contract')) {
+      Logger.error("Failed to query contract. Please check your network settings or install ethfs-cli 2.x if the contract was created with it.");
+    } else {
+      Logger.error(`SDK initialization failed, Please check your parameters and network connection, and try again.  info=${e.message}`);
+    }
+  }
+  return null;
 }
 
 const answer = async (text) => {
@@ -297,6 +316,7 @@ const upload = async (uploader, path, gasIncPct, threadPoolSize) => {
       }
     }
 
+    Logger.log('');
     Logger.success(`Total files: ${infoArr.length}`);
     Logger.success(`Total chunks uploaded: ${totalChunkCount}`);
     Logger.success(`Total data uploaded: ${totalDataSize} KB`);
@@ -306,7 +326,7 @@ const upload = async (uploader, path, gasIncPct, threadPoolSize) => {
     Logger.error(`Execution failed. Please check the parameters and try again. info=${length > 500 ? (e.message.substring(0, 245) + " ... " + e.message.substring(length - 245, length)) : e.message}`);
   }
 };
-// **** function ****
+// **** internal function ****
 
 module.exports.upload = estimateAndUpload;
 module.exports.create = createDirectory;

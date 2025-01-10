@@ -1,13 +1,12 @@
-const {ethers} = require("ethers");
-const {from, mergeMap} = require('rxjs');
+const { from, mergeMap, map, scan, filter } = require('rxjs');
 const {
     FlatDirectory,
-    UPLOAD_TYPE_BLOB,
-    UPLOAD_TYPE_CALLDATA
+    UploadType,
+    OP_BLOB_DATA_SIZE,
+    MAX_CHUNKS
 } = require("ethstorage-sdk");
 const {NodeFile} = require("ethstorage-sdk/file");
 
-const { FlatDirectoryAbi } = require('../params');
 const { recursiveFiles } = require('./utils');
 const { Logger } = require('./log');
 
@@ -26,52 +25,78 @@ class Uploader {
     #uploadType;
 
     static async create(pk, rpc, chainId, contractAddress, uploadType) {
-        const uploader = new Uploader(chainId);
-        const status = await uploader.#init(pk, rpc, contractAddress, uploadType);
+        const uploader = new Uploader();
+        const status = await uploader.#init(pk, rpc, chainId, contractAddress, uploadType);
         if (status) {
             return uploader;
         }
         return null;
     }
 
-    constructor(chainId) {
+    async #init(pk, rpc, chainId, contractAddress, uploadType) {
         this.#chainId = chainId;
-    }
-
-    async #init(pk, rpc, contractAddress, uploadType) {
-        const status = await this.#initType(rpc, contractAddress, uploadType);
-        if (!status) {
-            return false;
-        }
-
-        this.#flatDirectory = await FlatDirectory.create({
-            rpc: rpc, privateKey: pk, address: contractAddress
-        });
-        return true;
-    }
-
-    async #initType(rpc, contractAddress, uploadType) {
-        const provider = new ethers.JsonRpcProvider(rpc);
-        const fileContract = new ethers.Contract(contractAddress, FlatDirectoryAbi, provider);
-        let isSupportBlob;
         try {
-            isSupportBlob = await fileContract.isSupportBlob();
+            this.#flatDirectory = await FlatDirectory.create({
+                rpc: rpc, privateKey: pk, address: contractAddress
+            });
         } catch (e) {
-            Logger.error(`Failed to initialize upload type for contract ${contractAddress}. ${e.message}`);
+            if (e.message.includes('The current SDK does not support this contract')) {
+                Logger.error("Failed to query contract. Please check your network settings or install ethfs-cli 2.x if the contract was created with it.");
+            } else {
+                Logger.error(`SDK initialization failed, Please check your parameters and network connection, and try again.  info=${e.message}`);
+            }
             return false;
         }
 
         if (uploadType) {
             // check upload type
-            if (!isSupportBlob && Number(uploadType) === UPLOAD_TYPE_BLOB) {
+            if (!this.#flatDirectory.isSupportBlob && uploadType === UploadType.Blob) {
                 Logger.error(`Network does not support this upload type. Please switch to another type. Type=${uploadType}`);
                 return false;
             }
-            this.#uploadType = Number(uploadType);
+            this.#uploadType = uploadType;
         } else {
-            this.#uploadType = isSupportBlob ? UPLOAD_TYPE_BLOB : UPLOAD_TYPE_CALLDATA;
+            this.#uploadType = this.#flatDirectory.isSupportBlob ? UploadType.Blob : UploadType.Calldata;
         }
         return true;
+    }
+
+    async #fetchFileDataBatch(fileBatch) {
+        const keys = fileBatch.map(file => file.name);
+        const fileHashArr = await this.#flatDirectory.fetchHashes(keys);
+        return fileBatch.map(file => {
+            file.chunkHashes = fileHashArr[file.name];
+            return file;
+        })
+    }
+
+    #getFileChunkCount(fileSize) {
+        if (this.#uploadType === UploadType.Blob) {
+            return Math.ceil(fileSize / OP_BLOB_DATA_SIZE);
+        } else {
+            if (fileSize > 24 * 1024 - 326) {
+                // Data need to be sliced if file > 24K
+                return Math.ceil(fileSize / (24 * 1024 - 326));
+            }
+            return 1;
+        }
+    }
+
+    #groupFiles(files) {
+        return from(files).pipe(
+            scan((acc, file) => {
+                const newFiles = [...acc.files, file];
+                const totalChunks = acc.totalChunks + this.#getFileChunkCount(file.size);
+                const totalFileCount = acc.totalFileCount + 1;
+
+                if (totalChunks >= MAX_CHUNKS || totalFileCount === files.length) {
+                    return { files: [], totalChunks: 0, totalFileCount, batch: newFiles };
+                }
+                return { files: newFiles, totalChunks, totalFileCount, batch: [] };
+            }, { files: [], totalChunks: 0, totalFileCount: 0, batch: [] }),
+            filter(acc => acc.batch.length > 0), // Intercept unpacked data
+            map(acc => acc.batch)
+        );
     }
 
     // estimate cost
@@ -79,11 +104,15 @@ class Uploader {
         let totalFileCount = 0;
         let totalStorageCost = 0n;
         let totalGasCost = 0n;
-
+        // Execution
         const files = recursiveFiles(path, '');
         return new Promise((resolve, reject) => {
-            from(files)
-                .pipe(mergeMap(info => this.#estimate(info, gasIncPct), threadPoolSize))
+            this.#groupFiles(files) // Pack files into n groups
+                .pipe(
+                    mergeMap(fileBatch => this.#fetchFileDataBatch(fileBatch), threadPoolSize),
+                    mergeMap(files => from(files)), // Split a group of files into a single emission
+                    mergeMap(info => this.#estimate(info, gasIncPct), threadPoolSize)
+                )
                 .subscribe({
                     next: (cost) => {
                         totalFileCount++;
@@ -105,11 +134,12 @@ class Uploader {
 
     async #estimate(fileInfo, gasIncPct) {
         try {
-            const {path, name} = fileInfo;
+            const {path, name, chunkHashes} = fileInfo;
             const file = new NodeFile(path);
             return await this.#flatDirectory.estimateCost({
                 key: name,
                 content: file,
+                chunkHashes: chunkHashes,
                 type: this.#uploadType,
                 gasIncPct: gasIncPct
             });
@@ -122,9 +152,15 @@ class Uploader {
     // upload
     async upload(path, gasIncPct, threadPoolSize) {
         const results = [];
+        // Execution
+        const files = recursiveFiles(path, '');
         return new Promise((resolve, reject) => {
-            from(recursiveFiles(path, ''))
-                .pipe(mergeMap(info => this.#upload(info, gasIncPct), threadPoolSize))
+            this.#groupFiles(files)
+                .pipe(
+                    mergeMap(fileBatch => this.#fetchFileDataBatch(fileBatch), threadPoolSize),
+                    mergeMap(files => from(files)),
+                    mergeMap(info => this.#upload(info, gasIncPct), threadPoolSize)
+                )
                 .subscribe({
                     next: (info) => { results.push(info); },
                     error: (error) => { reject(error); },
@@ -134,7 +170,7 @@ class Uploader {
     }
 
     async #upload(fileInfo, gasIncPct) {
-        const {path, name} = fileInfo;
+        const {path, name, chunkHashes} = fileInfo;
 
         let totalChunkCount = 0;
         let currentSuccessIndex = -1;
@@ -158,7 +194,7 @@ class Uploader {
             },
             onFail: (e) => {
                 const length = e.message.length;
-                Logger.error(`Upload failed for file ${name}: ${length > 500 ? (e.message.substring(0, 245) + " ... " + e.message.substring(length - 245, length)) : e.message}`);
+                console.log(`${length > 500 ? (e.message.substring(0, 245) + " ... " + e.message.substring(length - 245, length)) : e.message}`, name);
             },
             onFinish: (totalUploadChunks, totalSize, totalCost) => {
                 totalUploadCount = totalUploadChunks;
@@ -171,6 +207,7 @@ class Uploader {
         await this.#flatDirectory.upload({
             key: name,
             content: file,
+            chunkHashes: chunkHashes,
             type: this.#uploadType,
             gasIncPct: gasIncPct,
             callback: callback

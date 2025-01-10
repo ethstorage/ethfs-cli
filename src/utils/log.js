@@ -19,7 +19,7 @@ class Logger {
     }
 
     static success(message) {
-        console.log(successColor(`✅  SUCCESS:   ${message}`));
+        console.log(successColor(`✅  FINISH:    ${message}`));
     }
 
     static log(message) {
