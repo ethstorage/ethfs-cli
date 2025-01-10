@@ -19,19 +19,19 @@ const {
   checkBalance,
   getChainIdByRpc,
   getWebHandler,
-  Uploader
+  Uploader,
+  Logger
 } = require('./utils');
 
 const color = require('colors-cli/safe')
 const error = color.red.bold;
-const notice = color.blue;
 
 const CHAIN_ID_DEFAULT = ETHEREUM_CHAIN_ID;
 
 // **** function ****
 const createDirectory = async (key, chainId, rpc) => {
   if (!isPrivateKey(key)) {
-    console.error(error(`ERROR: invalid private key!`));
+    Logger.error("Invalid private key.");
     return;
   }
 
@@ -40,7 +40,7 @@ const createDirectory = async (key, chainId, rpc) => {
     chainId = Number(chainId);
     const rpcChainId = await getChainIdByRpc(rpc);
     if (rpcChainId && rpcChainId !== chainId) {
-      console.error(error(`ERROR: --chainId(${chainId}) and rpc chainId(${rpcChainId}) conflict.`));
+      Logger.error(`Chain ID conflict: provided (${chainId}) vs RPC (${rpcChainId}).`);
       return;
     }
   } else if (rpc) {
@@ -52,26 +52,30 @@ const createDirectory = async (key, chainId, rpc) => {
   // get rpc
   const providerUrl = rpc || PROVIDER_URLS[chainId];
   if (!providerUrl) {
-    console.error(error(`ERROR: The network need RPC, please try again after setting RPC!`));
+    Logger.error("RPC is required for the network. Please provide an RPC and try again.");
     return;
   }
 
-  console.log("chainId =", chainId);
-  console.log("providerUrl =", providerUrl);
+  Logger.info(`Using chainId: ${chainId}`);
+  Logger.info(`Using provider URL: ${providerUrl}`);
+  Logger.log('');
   const fd = await FlatDirectory.create({
     rpc: providerUrl,
     privateKey: key,
   });
-  await fd.deploy();
+  const address = await fd.deploy();
+  if (address) {
+    Logger.success("Deployment successful.");
+  }
 };
 
 const setDefault = async (key, domain, filename, rpc, chainId) => {
   if (!isPrivateKey(key)) {
-    console.error(error(`ERROR: invalid private key!`));
+    Logger.error("Invalid private key.");
     return;
   }
   if (!domain) {
-    console.error(error(`ERROR: invalid address!`));
+    Logger.error("Invalid domain or address.");
     return;
   }
 
@@ -84,30 +88,30 @@ const setDefault = async (key, domain, filename, rpc, chainId) => {
     });
     const status = await fd.setDefault(filename);
     if (status) {
-      console.log(`Set default success!`);
+      Logger.success("Default file set successfully.");
     }
   } else {
-    console.log(error(`ERROR: ${domain} domain doesn't exist`));
+    Logger.error(`Domain ${domain} does not exist.`);
   }
 };
 
 const remove = async (key, domain, fileName, rpc, chainId) => {
   if (!isPrivateKey(key)) {
-    console.error(error(`ERROR: invalid private key!`));
+    Logger.error("Invalid private key.");
     return;
   }
   if (!domain) {
-    console.error(error(`ERROR: invalid address!`));
+    Logger.error("Invalid domain address.");
     return;
   }
   if (!fileName) {
-    console.error(error(`ERROR: invalid file name!`));
+    Logger.error("Invalid file name.");
     return;
   }
 
-  const {providerUrl, address} = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
+  const { providerUrl, address } = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
   if (providerUrl && parseInt(address) > 0) {
-    console.log(`Removing file ${fileName}`);
+    Logger.info(`Removing file: ${fileName}`);
     const provider = new ethers.JsonRpcProvider(providerUrl);
     const wallet = new ethers.Wallet(key, provider);
     const prevInfo = await checkBalance(provider, address, wallet.address);
@@ -119,27 +123,29 @@ const remove = async (key, domain, fileName, rpc, chainId) => {
     });
     const status = await fd.remove(fileName);
     if (status) {
-      console.log(`Remove success!`);
+      Logger.success("File removed successfully.");
     }
 
     const info = await checkBalance(provider, address, wallet.address);
-    console.log(`domainBalance: ${info.domainBalance}, accountBalance: ${info.accountBalance}, balanceChange: ${prevInfo.accountBalance - info.accountBalance}`);
+    Logger.info(`Domain balance: ${info.domainBalance}`);
+    Logger.info(`Account balance: ${info.accountBalance}`);
+    Logger.info(`Balance change: ${prevInfo.accountBalance - info.accountBalance}`);
   } else {
-    console.log(error(`ERROR: ${domain} domain doesn't exist`));
+    Logger.error(`Domain ${domain} does not exist.`);
   }
 }
 
 const download = async (domain, fileName, rpc, chainId) => {
   if (!domain) {
-    console.error(error(`ERROR: invalid address!`));
+    Logger.error("Invalid domain address.");
     return;
   }
   if (!fileName) {
-    console.error(error(`ERROR: invalid file name!`));
+    Logger.error("Invalid file name.");
     return;
   }
 
-  let handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
+  const handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
   if (parseInt(handler.address) > 0) {
     const savePath = path.join(process.cwd(), fileName);
     if (!fs.existsSync(path.dirname(savePath))) {
@@ -161,49 +167,48 @@ const download = async (domain, fileName, rpc, chainId) => {
       },
       onFail: (e) => {
         fs.unlink(savePath, () => {});
-        console.error(e.message);
-        console.log(error("ERROR: Download failed"), fileName);
+        Logger.error(`Download failed for file ${fileName}: ${e.message}`);
       },
       onFinish: () => {
-        console.log(`Success: file path is ${savePath}`);
+        Logger.success(`File downloaded successfully: ${savePath}`);
       }
     });
   } else {
-    console.log(error(`ERROR: ${domain} domain doesn't exist`));
+    Logger.error(`Domain ${domain} does not exist.`);
   }
 }
 
 const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPct, threadPoolSize, estimateGas) => {
   if (!isPrivateKey(key)) {
-    console.error(error(`ERROR: invalid private key!`));
+    Logger.error("Invalid private key.");
     return;
   }
   if (!domain) {
-    console.error(error(`ERROR: invalid address!`));
+    Logger.error("Invalid domain or address.");
     return;
   }
   if (!path) {
-    console.error(error(`ERROR: invalid file!`));
+    Logger.error("Invalid file path.");
     return;
   }
   if (!fs.existsSync(path)) {
-    console.error(error(`ERROR: The file or folder does not exist!`), path);
+    Logger.error("File or folder does not exist.");
     return;
   }
   if (type) {
-    if(type === TYPE_CALLDATA) {
+    if (type === TYPE_CALLDATA) {
       type = UPLOAD_TYPE_CALLDATA;
-    } else if(type === TYPE_BLOB) {
+    } else if (type === TYPE_BLOB) {
       type = UPLOAD_TYPE_BLOB;
     } else if (Number(type) !== UPLOAD_TYPE_CALLDATA && Number(type) !== UPLOAD_TYPE_BLOB) {
-      console.error(error(`ERROR: invalid upload type!`));
+      Logger.error("Invalid upload type.");
       return;
     }
   }
 
   const handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT, false);
   if (!handler.providerUrl || parseInt(handler.address) <= 0) {
-    console.log(error(`ERROR: ${domain} domain doesn't exist`));
+    Logger.error(`Domain ${domain} does not exist.`);
     return;
   }
 
@@ -214,21 +219,22 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
   } else {
     threadPoolSize = DEFAULT_THREAD_POOL_SIZE_LOW;
   }
-  console.log(`threadPoolSize = ${threadPoolSize} \n`);
+  Logger.info(`Thread pool size: ${threadPoolSize}`);
+  Logger.log('');
 
   // query total cost
   const uploader = await Uploader.create(key, handler.providerUrl, handler.chainId, handler.address, type);
   if (!uploader) {
-    console.log(error(`ERROR: Failed to initialize the SDK, please check the parameters and network and try again.`));
+    Logger.error("Failed to initialize SDK. Check parameters and network and try again.");
     return;
   }
 
   if (estimateGas) {
     // get cost
     await estimateCost(uploader, path, gasIncPct, threadPoolSize);
-    if (await answer(`Continue?`)) {
+    if (await answer("Continue?")) {
       // upload
-      console.log();
+      Logger.log('');
       await upload(uploader, path, gasIncPct, threadPoolSize);
     }
   } else {
@@ -258,16 +264,16 @@ const estimateCost = async (uploader, path, gasIncPct, threadPoolSize) => {
     const cost = await uploader.estimateCost(spin, path, gasIncPct, threadPoolSize);
     spin.succeed('Estimating cost progress: 100%');
 
-    console.log();
-    console.log(`Info: The number of files is ${error(cost.totalFileCount.toString())}`);
-    console.log(`Info: Storage cost is expected to be ${error(ethers.formatEther(cost.totalStorageCost))} ETH`);
-    console.log(`Info: Gas cost is expected to be ${error(ethers.formatEther(cost.totalGasCost))} ETH`);
-    console.log(`Info: The total cost is ${error(ethers.formatEther(cost.totalStorageCost + cost.totalGasCost))} ETH`);
+    Logger.log('');
+    Logger.info(`Total files: ${error(cost.totalFileCount.toString())}`);
+    Logger.info(`Expected storage cost: ${error(ethers.formatEther(cost.totalStorageCost))} ETH`);
+    Logger.info(`Expected gas cost: ${error(ethers.formatEther(cost.totalGasCost))} ETH`);
+    Logger.info(`Total estimated cost: ${error(ethers.formatEther(cost.totalStorageCost + cost.totalGasCost))} ETH`);
   } catch (e) {
-    console.log();
+    Logger.log('');
     const length = e.message.length;
-    console.log(length > 400 ? (e.message.substring(0, 200) + " ... " + e.message.substring(length - 190, length)) : e.message);
-    console.log(error(e.value ? `Estimate gas failed, the failure file is ${e.value}` : 'Estimate gas failed'));
+    Logger.log(length > 400 ? (e.message.substring(0, 200) + " ... " + e.message.substring(length - 190, length)) : e.message);
+    Logger.error(e.value ? `Estimate gas failed, the failure file is ${e.value}` : 'Estimate gas failed');
   } finally {
     spin.stop();
   }
@@ -276,7 +282,7 @@ const estimateCost = async (uploader, path, gasIncPct, threadPoolSize) => {
 const upload = async (uploader, path, gasIncPct, threadPoolSize) => {
   try {
     const infoArr = await uploader.upload(path, gasIncPct, threadPoolSize);
-    console.log();
+    Logger.log('');
     let totalStorageCost = 0n, totalChunkCount = 0, totalDataSize = 0;
     for (const file of infoArr) {
       if (file.currentSuccessIndex >= 0) {
@@ -284,21 +290,20 @@ const upload = async (uploader, path, gasIncPct, threadPoolSize) => {
         totalChunkCount += file.totalUploadCount;
         totalDataSize += file.totalUploadSize;
         if (file.totalChunkCount > file.currentSuccessIndex + 1) {
-          console.log(error(`ERROR: ${file.fileName} uploaded failed. The chunkId is ${file.currentSuccessIndex + 1}`));
+          Logger.error(`${file.fileName} upload failed at chunk ${file.currentSuccessIndex + 1}`);
         }
       } else {
-        console.log(error(`ERROR: ${file.fileName} uploaded failed.`));
+        Logger.error(`${file.fileName} upload failed.`);
       }
     }
 
-    console.log(notice(`Total File Count: ${infoArr.length}`));
-    console.log(notice(`Total Upload Chunk Count: ${totalChunkCount}`));
-    console.log(notice(`Total Upload Data Size: ${totalDataSize} KB`));
-    console.log(notice(`Total Storage Cost: ${ethers.formatEther(totalStorageCost)} ETH`));
+    Logger.success(`Total files: ${infoArr.length}`);
+    Logger.success(`Total chunks uploaded: ${totalChunkCount}`);
+    Logger.success(`Total data uploaded: ${totalDataSize} KB`);
+    Logger.success(`Total storage cost: ${ethers.formatEther(totalStorageCost)} ETH`);
   } catch (e) {
     const length = e.message.length;
-    console.log(length > 500 ? (e.message.substring(0, 245) + " ... " + e.message.substring(length - 245, length)) : e.message);
-    console.log(error(`ERROR: Execution failed. Please check the parameters and try again!`));
+    Logger.error(`Execution failed. Please check the parameters and try again. info=${length > 500 ? (e.message.substring(0, 245) + " ... " + e.message.substring(length - 245, length)) : e.message}`);
   }
 };
 // **** function ****

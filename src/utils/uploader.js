@@ -8,12 +8,9 @@ const {
 const {NodeFile} = require("ethstorage-sdk/file");
 
 const { FlatDirectoryAbi } = require('../params');
-const {
-    recursiveFiles
-} = require('./utils');
+const { recursiveFiles } = require('./utils');
+const { Logger } = require('./log');
 
-const color = require("colors-cli/safe");
-const error = color.red.bold;
 
 class UploadError extends Error {
     constructor(message, value) {
@@ -26,7 +23,6 @@ class UploadError extends Error {
 class Uploader {
     #chainId;
     #flatDirectory;
-
     #uploadType;
 
     static async create(pk, rpc, chainId, contractAddress, uploadType) {
@@ -61,14 +57,14 @@ class Uploader {
         try {
             isSupportBlob = await fileContract.isSupportBlob();
         } catch (e) {
-            console.log(`ERROR: Init upload type fail.`, e.message);
+            Logger.error(`Failed to initialize upload type for contract ${contractAddress}. ${e.message}`);
             return false;
         }
 
         if (uploadType) {
             // check upload type
             if (!isSupportBlob && Number(uploadType) === UPLOAD_TYPE_BLOB) {
-                console.log(`ERROR: The current network does not support this upload type, please switch to another type. Type=${uploadType}`);
+                Logger.error(`Network does not support this upload type. Please switch to another type. Type=${uploadType}`);
                 return false;
             }
             this.#uploadType = Number(uploadType);
@@ -153,16 +149,16 @@ class Uploader {
                     indexArr.push(i);
                 }
                 if (isChange) {
-                    console.log("FlatDirectory: Chunks " + indexArr.join(',') + " have been uploaded", '', name);
+                    Logger.log(`FlatDirectory: Chunks ${indexArr.join(',')} have been uploaded for ${name}.`);
                 } else {
-                    console.log("FlatDirectory: Chunks " + indexArr.join(',') + " have not been changed", '', name);
+                    Logger.log(`FlatDirectory: Chunks ${indexArr.join(',')} have not been changed for ${name}.`);
                 }
                 currentSuccessIndex = progress;
                 totalChunkCount = count;
             },
             onFail: (e) => {
                 const length = e.message.length;
-                console.log(error(length > 500 ? (e.message.substring(0, 245) + " ... " + e.message.substring(length - 245, length)) : e.message), name);
+                Logger.error(`Upload failed for file ${name}: ${length > 500 ? (e.message.substring(0, 245) + " ... " + e.message.substring(length - 245, length)) : e.message}`);
             },
             onFinish: (totalUploadChunks, totalSize, totalCost) => {
                 totalUploadCount = totalUploadChunks;
