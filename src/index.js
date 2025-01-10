@@ -8,7 +8,6 @@ const {
   PROVIDER_URLS,
   ETH_STORAGE_RPC,
   ETHEREUM_CHAIN_ID,
-  FlatDirectoryAbi,
   TYPE_CALLDATA,
   TYPE_BLOB,
   QUARKCHAIN_L2_TESTNET_CHAIN_ID,
@@ -64,36 +63,6 @@ const createDirectory = async (key, chainId, rpc) => {
     privateKey: key,
   });
   await fd.deploy();
-};
-
-const refund = async (key, domain, rpc, chainId) => {
-  if (!isPrivateKey(key)) {
-    console.error(error(`ERROR: invalid private key!`));
-    return;
-  }
-  if (!domain) {
-    console.error(error(`ERROR: invalid address!`));
-    return;
-  }
-
-  const {providerUrl, address} = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
-  if (providerUrl && parseInt(address) > 0) {
-    const provider = new ethers.JsonRpcProvider(providerUrl);
-    const wallet = new ethers.Wallet(key, provider);
-    const fileContract = new ethers.Contract(address, FlatDirectoryAbi, wallet);
-    try {
-      const tx = await fileContract.refund();
-      console.log(`FlatDirectory: Tx hash is ${tx.hash}`);
-      const txReceipt = await tx.wait();
-      if (txReceipt.status) {
-        console.log(`Refund success!`);
-      }
-    } catch (e) {
-      console.error(`ERROR: Refund failed!`, e.message);
-    }
-  } else {
-    console.log(error(`ERROR: ${domain} domain doesn't exist`));
-  }
 };
 
 const setDefault = async (key, domain, filename, rpc, chainId) => {
@@ -336,7 +305,6 @@ const upload = async (uploader, path, gasIncPct, threadPoolSize) => {
 
 module.exports.upload = estimateAndUpload;
 module.exports.create = createDirectory;
-module.exports.refund = refund;
 module.exports.remove = remove;
 module.exports.setDefault = setDefault;
 module.exports.download = download;
