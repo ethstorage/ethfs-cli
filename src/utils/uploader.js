@@ -8,10 +8,8 @@ const {
 const {NodeFile} = require("ethstorage-sdk/file");
 
 const { FlatDirectoryAbi } = require('../params');
-const {
-    recursiveFiles,
-    Logger
-} = require('./utils');
+const { recursiveFiles } = require('./utils');
+const { Logger } = require('./log');
 
 
 class UploadError extends Error {
@@ -151,9 +149,9 @@ class Uploader {
                     indexArr.push(i);
                 }
                 if (isChange) {
-                    Logger.info(`FlatDirectory: Chunks ${indexArr.join(',')} have been uploaded for ${name}.`);
+                    Logger.log(`FlatDirectory: Chunks ${indexArr.join(',')} have been uploaded for ${name}.`);
                 } else {
-                    Logger.info(`FlatDirectory: Chunks ${indexArr.join(',')} have not been changed for ${name}.`);
+                    Logger.log(`FlatDirectory: Chunks ${indexArr.join(',')} have not been changed for ${name}.`);
                 }
                 currentSuccessIndex = progress;
                 totalChunkCount = count;

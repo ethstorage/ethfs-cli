@@ -58,6 +58,7 @@ const createDirectory = async (key, chainId, rpc) => {
 
   Logger.info(`Using chainId: ${chainId}`);
   Logger.info(`Using provider URL: ${providerUrl}`);
+  Logger.log('');
   const fd = await FlatDirectory.create({
     rpc: providerUrl,
     privateKey: key,
@@ -219,6 +220,7 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
     threadPoolSize = DEFAULT_THREAD_POOL_SIZE_LOW;
   }
   Logger.info(`Thread pool size: ${threadPoolSize}`);
+  Logger.log('');
 
   // query total cost
   const uploader = await Uploader.create(key, handler.providerUrl, handler.chainId, handler.address, type);
@@ -232,7 +234,7 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
     await estimateCost(uploader, path, gasIncPct, threadPoolSize);
     if (await answer("Continue?")) {
       // upload
-      Logger.log();
+      Logger.log('');
       await upload(uploader, path, gasIncPct, threadPoolSize);
     }
   } else {
@@ -262,13 +264,13 @@ const estimateCost = async (uploader, path, gasIncPct, threadPoolSize) => {
     const cost = await uploader.estimateCost(spin, path, gasIncPct, threadPoolSize);
     spin.succeed('Estimating cost progress: 100%');
 
-    Logger.log();
+    Logger.log('');
     Logger.info(`Total files: ${error(cost.totalFileCount.toString())}`);
     Logger.info(`Expected storage cost: ${error(ethers.formatEther(cost.totalStorageCost))} ETH`);
     Logger.info(`Expected gas cost: ${error(ethers.formatEther(cost.totalGasCost))} ETH`);
     Logger.info(`Total estimated cost: ${error(ethers.formatEther(cost.totalStorageCost + cost.totalGasCost))} ETH`);
   } catch (e) {
-    Logger.log();
+    Logger.log('');
     const length = e.message.length;
     Logger.log(length > 400 ? (e.message.substring(0, 200) + " ... " + e.message.substring(length - 190, length)) : e.message);
     Logger.error(e.value ? `Estimate gas failed, the failure file is ${e.value}` : 'Estimate gas failed');
@@ -280,7 +282,7 @@ const estimateCost = async (uploader, path, gasIncPct, threadPoolSize) => {
 const upload = async (uploader, path, gasIncPct, threadPoolSize) => {
   try {
     const infoArr = await uploader.upload(path, gasIncPct, threadPoolSize);
-    Logger.log();
+    Logger.log('');
     let totalStorageCost = 0n, totalChunkCount = 0, totalDataSize = 0;
     for (const file of infoArr) {
       if (file.currentSuccessIndex >= 0) {
@@ -301,8 +303,7 @@ const upload = async (uploader, path, gasIncPct, threadPoolSize) => {
     Logger.success(`Total storage cost: ${ethers.formatEther(totalStorageCost)} ETH`);
   } catch (e) {
     const length = e.message.length;
-    Logger.error(length > 500 ? (e.message.substring(0, 245) + " ... " + e.message.substring(length - 245, length)) : e.message);
-    Logger.error('Execution failed. Please check the parameters and try again.');
+    Logger.error(`Execution failed. Please check the parameters and try again. info=${length > 500 ? (e.message.substring(0, 245) + " ... " + e.message.substring(length - 245, length)) : e.message}`);
   }
 };
 // **** function ****
