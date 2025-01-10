@@ -224,7 +224,6 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
   // query total cost
   const uploader = await Uploader.create(key, handler.providerUrl, handler.chainId, handler.address, type);
   if (!uploader) {
-    Logger.error("Failed to initialize SDK. Check parameters and network and try again.");
     return;
   }
 
