@@ -11,9 +11,7 @@ const {
     NSAbi,
     ResolverAbi,
 } = require('../params');
-
-const color = require('colors-cli/safe')
-const error = color.red.bold;
+const { Logger } = require('./log');
 
 function isPrivateKey(key) {
     try {
@@ -64,7 +62,7 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) 
     if (domains.length > 1) {
         snChainId = NETWORK_MAPPING[domains[0]];
         if (!snChainId) {
-            console.error(error(`ERROR: invalid shortName=${domains[0]}.`));
+            Logger.error(`Invalid shortName: ${domains[0]} not found in network mapping.`);
             return;
         }
         address = domains[1];
@@ -79,16 +77,16 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) 
     if (chainId) {
         chainId = Number(chainId);
         if (snChainId && chainId !== snChainId) {
-            console.error(error(`ERROR: --chainId(${chainId}) and short name chainId(${snChainId}) conflict.`));
+            Logger.error(`Conflict: Provided chainId (${chainId}) and shortName chainId (${snChainId}) do not match.`);
             return;
         }
         if (rpcChainId && chainId !== rpcChainId) {
-            console.error(error(`ERROR: --chainId(${chainId}) and rpc chainId(${rpcChainId}) conflict.`));
+            Logger.error(`Conflict: Provided chainId (${chainId}) and RPC chainId (${rpcChainId}) do not match.`);
             return;
         }
     } else if (snChainId) {
         if (rpcChainId && snChainId !== rpcChainId) {
-            console.error(error(`ERROR: short name chainId(${snChainId}) and rpc chainId(${rpcChainId}) conflict.`));
+            Logger.error(`Conflict: shortName chainId (${snChainId}) and RPC chainId (${rpcChainId}) do not match.`);
             return;
         }
         chainId = snChainId;
@@ -104,22 +102,24 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) 
     // get rpc
     let providerUrl = rpc || PROVIDER_URLS[chainId];
     if (!providerUrl) {
-        console.error(error(`ERROR: The network(${chainId}) need RPC, please try again after setting RPC!`));
+        Logger.error(`No RPC found for chainId ${chainId}. Please provide a valid RPC.`);
         return;
     }
 
-    const br = isBr ? "\n" : "";
     // address
     const ethAddrReg = /^0x[0-9a-fA-F]{40}$/;
     if (ethAddrReg.test(address)) {
-        console.log(`providerUrl = ${providerUrl}\nchainId = ${chainId}\naddress = ${address} ${br}`);
-        return {providerUrl, chainId, address};
+        Logger.info(`Provider URL: ${providerUrl}`);
+        Logger.info(`Chain ID: ${chainId}`);
+        Logger.info(`Address: ${address}`);
+        if (isBr) Logger.log('');
+        return { providerUrl, chainId, address };
     }
 
     // .w3q or .eth domain
     let nameServiceContract = NS_ADDRESS[chainId];
     if (!nameServiceContract) {
-        console.log(error(`Not Support Name Service: ${domain}`));
+        Logger.error(`Name Service not supported for domain ${domain}.`);
         return;
     }
     let webHandler;
@@ -135,14 +135,17 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) 
             webHandler = await resolverContract.text(nameHash, "contentcontract");
         }
     } catch (e) {
-        console.log(error(`Not Support Domain: ${domain}`));
+        Logger.error(`Unable to resolve domain ${domain}.`);
         return;
     }
 
     // address
     if (ethAddrReg.test(webHandler)) {
-        console.log(`providerUrl = ${providerUrl}\nchainId = ${chainId}\naddress = ${address} ${br}`);
-        return {providerUrl, chainId, address: webHandler};
+        Logger.info(`Provider URL: ${providerUrl}`);
+        Logger.info(`Chain ID: ${chainId}`);
+        Logger.info(`Address: ${webHandler}`);
+        if (isBr) Logger.log('');
+        return { providerUrl, chainId, address: webHandler };
     }
     const short = webHandler.split(":");
     let shortAdd, shortName;
@@ -150,12 +153,15 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) 
         shortName = domains[0];
         shortAdd = domains[1];
     } else {
-        console.error(error(`ERROR: invalid web handler=${webHandler}.`));
+        Logger.error(`Invalid web handler format: ${webHandler}.`);
         return;
     }
     const newChainId = NETWORK_MAPPING[shortName];
     providerUrl = chainId === newChainId ? providerUrl : PROVIDER_URLS[newChainId];
-    console.log(`providerUrl = ${providerUrl}\nchainId = ${chainId}\naddress = ${address} ${br}`);
+    Logger.info(`Provider URL: ${providerUrl}`);
+    Logger.info(`Chain ID: ${newChainId}`);
+    Logger.info(`Address: ${shortAdd}`);
+    if (isBr) Logger.log('');
     return {
         providerUrl: providerUrl,
         chainId: newChainId,
@@ -173,7 +179,7 @@ async function checkBalance(provider, domainAddr, accountAddr) {
             accountBalance: values[1]
         };
     }, reason => {
-        console.log(reason);
+        Logger.error(`Balance check failed: ${reason}`);
     });
 }
 
