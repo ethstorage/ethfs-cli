@@ -16,6 +16,7 @@
   "dependencies": {
     "colors-cli": "^1.0.33",
     "commander": "^11.1.0",
+    "dotenv": "^16.4.7",
     "eth-ens-namehash": "^2.0.8",
     "ethers": "^6.13.1",
     "ethstorage-sdk": "^3.0.0",

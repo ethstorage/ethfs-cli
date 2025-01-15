@@ -159,16 +159,19 @@ const download = async (domain, fileName, rpc, chainId) => {
     if (!fd) {
       return;
     }
+    let success = true;
     await fd.download(fileName, {
       onProgress: (progress, count, chunk) => {
         fs.appendFileSync(savePath, chunk);
+        Logger.log(`Download: progress is ${progress} / ${count}`);
       },
       onFail: (e) => {
+        success = false;
         fs.unlink(savePath, () => {});
         Logger.error(`Download failed for file ${fileName}: ${e.message}`);
       },
       onFinish: () => {
-        Logger.success(`File downloaded successfully: ${savePath}`);
+        if (success) Logger.success(`File downloaded successfully: ${savePath}`);
       }
     });
   } else {
@@ -322,7 +325,8 @@ const upload = async (uploader, path, gasIncPct, threadPoolSize) => {
     Logger.success(`Total storage cost: ${ethers.formatEther(totalStorageCost)} ETH`);
   } catch (e) {
     const length = e.message.length;
-    Logger.error(`Execution failed. Please check the parameters and try again. info=${length > 500 ? (e.message.substring(0, 245) + " ... " + e.message.substring(length - 245, length)) : e.message}`);
+    Logger.error(length > 500 ? (e.message.substring(0, 245) + " ... " + e.message.substring(length - 245, length)) : e.message);
+    Logger.error(`Execution failed. Please check the error message and try again after making necessary adjustments.`);
   }
 };
 // **** internal function ****
