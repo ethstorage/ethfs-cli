@@ -136,15 +136,43 @@ const runTests = async () => {
     // Prepare
     const largeFileName = "tempLargeFile.txt";
     const largeFile = path.resolve(__dirname, largeFileName);
-    createLargeFile(3, largeFile); // 6MB
+    createLargeFile(15, largeFile); // 15MB
     const folderPath = path.resolve(__dirname, 'randomFiles');
-    createFiles(13, folderPath);
-    const largeFileHash = await getFileHash(largeFile);
+    createFiles(13, folderPath); // 13 files
+
+    // quark chain
+    console.log("Running tests for QuarkChain L2 Network...");
+    const qkcChainId = 3335;
+    let address = await createContract(qkcChainId);
+    await setDefaultFile(address, qkcChainId);
+
+    await uploadFile(address, qkcChainId, largeFile); // upload large file
+    await uploadFile(address, qkcChainId, largeFile); // upload again
+
+    await uploadFile(address, qkcChainId, folderPath); // upload files
+    await uploadFile(address, qkcChainId, folderPath); // upload files again
+
+    // download and check
+    let largeFileHash = await getFileHash(largeFile);
+    deleteFile(largeFile);
+    await downloadFile(address, qkcChainId, largeFileName);
+    let downloadFileHash = await getFileHash(largeFile);
+    console.log(`\n File integrity check: `, largeFileHash === downloadFileHash);
+
+    // clear
+    deleteFile(largeFile);
+    deleteFolder(folderPath);
+
+
+
 
     // sepolia
-    console.log("Running tests for Sepolia Network...");
-    let sepoliaChainId =  11155111;
-    let address = await createContract(sepoliaChainId);
+    console.log("\nRunning tests for Sepolia Network...");
+    createLargeFile(2.5, largeFile); // 2.5MB
+    createFiles(5, folderPath); // 5 files
+
+    const sepoliaChainId =  11155111;
+    address = await createContract(sepoliaChainId);
     await setDefaultFile(address, sepoliaChainId);
 
     await uploadFile(address, sepoliaChainId, largeFile); // upload large file
@@ -155,31 +183,11 @@ const runTests = async () => {
 
     // TODO not support op blob
     // download and check
+    // largeFileHash = await getFileHash(largeFile);
     // deleteFile(largeFile);
     // await downloadFile(address, sepoliaChainId, largeFileName);
-    // let downloadFileHash = await getFileHash(largeFile);
+    // downloadFileHash = await getFileHash(largeFile);
     // console.log(`\n File integrity check: `, largeFileHash === downloadFileHash);
-
-
-
-    // quarkchain
-    console.log("\nRunning tests for QuarkChain L2 Network...");
-    const qkcChainId = 3335;
-    createLargeFile(15, largeFile);
-    address = await createContract(qkcChainId);
-    await setDefaultFile(address, qkcChainId);
-
-    await uploadFile(address, qkcChainId, largeFile); // upload large file
-    await uploadFile(address, qkcChainId, largeFile); // upload again
-
-    await uploadFile(address, qkcChainId, folderPath); // upload files
-    await uploadFile(address, qkcChainId, folderPath); // upload files again
-
-    // download and check
-    deleteFile(largeFile);
-    await downloadFile(address, qkcChainId, largeFileName);
-    let downloadFileHash = await getFileHash(largeFile);
-    console.log(`\n File integrity check: `, largeFileHash === downloadFileHash);
 
     // clear
     deleteFile(largeFile);
