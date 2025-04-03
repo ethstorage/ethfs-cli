@@ -221,6 +221,12 @@ class Uploader {
             totalStorageCost: totalStorageCost,
         };
     }
+
+    async close() {
+        if(this.#flatDirectory) {
+            await this.#flatDirectory.close();
+        }
+    }
 }
 
 module.exports = {
