@@ -159,19 +159,17 @@ const download = async (domain, fileName, rpc, chainId) => {
     if (!fd) {
       return;
     }
-    let success = true;
     await fd.download(fileName, {
       onProgress: (progress, count, chunk) => {
         fs.appendFileSync(savePath, chunk);
         Logger.log(`Download: progress is ${progress} / ${count}`);
       },
       onFail: (e) => {
-        success = false;
         fs.unlink(savePath, () => {});
         Logger.error(`Download failed for file ${fileName}: ${e.message}`);
       },
       onFinish: () => {
-        if (success) Logger.success(`File downloaded successfully: ${savePath}`);
+         Logger.success(`File downloaded successfully: ${savePath}`);
       }
     });
   } else {
