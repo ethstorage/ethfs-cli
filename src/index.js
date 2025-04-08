@@ -197,7 +197,7 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
     }
   }
 
-  const handler = await getHandler(domain, rpc, chainId);
+  const handler = await getHandler(domain, rpc, chainId, false);
   if (!handler) return;
 
   if (threadPoolSize) {
@@ -315,8 +315,8 @@ const safeClose = async (instance) => {
   }
 };
 
-const getHandler = async (domain, rpc, chainId) => {
-  const handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
+const getHandler = async (domain, rpc, chainId, isBr = true) => {
+  const handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT, isBr);
   if (!handler?.providerUrl || parseInt(handler?.address) <= 0) {
     Logger.error(`Domain ${domain} does not exist.`);
     return null;
