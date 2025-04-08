@@ -48,8 +48,7 @@ npx ethfs-cli upload -f <directory|file> -a <address> -p <private-key> -c [chain
 | Optimism Testnet           | ogor / 420                    | 
 | Arbitrum One               | arb1 / 42161                  | 
 | Arbitrum Nova              | arb-nova / 42170              | 
-| Arbitrum Testnet           | arb-goerli / 421613           | 
-| Web3Q Galileo Testnet      | w3q-g / 3334                  | 
+| Arbitrum Testnet           | arb-goerli / 421613           |  
 | BNB Smart Chain            | bnb / 56                      | 
 | BNB Smart Chain Testnet    | bnbt / 97                     | 
 | Avalanche C-Chain          | avax / 43114                  | 
@@ -65,7 +64,7 @@ npx ethfs-cli upload -f <directory|file> -a <address> -p <private-key> -c [chain
 | Harmony Testnet Shard 0    | hmy-b-s0 / 1666700000         |
 | Evmos                      | evmos / 9001                  | 
 | Evmos Testnet              | evmos-testnet / 9000          |
-| QuarkChain L2 Testnet      | esl2-t / 43069                |
+| QuarkChain L2 Testnet      | qkcl2-b / 3335                |
  
 
 ## Usage
