@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const ora = require("ora");
 const readline = require('readline');
-const { FlatDirectory, UploadType} = require("ethstorage-sdk");
+const { FlatDirectory, UploadType } = require("ethstorage-sdk");
 const { ethers } = require("ethers");
 const {
   PROVIDER_URLS,
@@ -63,9 +63,13 @@ const createDirectory = async (key, chainId, rpc) => {
     rpc: providerUrl,
     privateKey: key,
   });
-  const address = await fd.deploy();
-  if (address) {
-    Logger.success("Deployment successful.");
+  try {
+    const address = await fd.deploy();
+    if (address) {
+      Logger.success("Deployment successful.");
+    }
+  } finally {
+    await safeClose(fd)
   }
 };
 
@@ -86,9 +90,13 @@ const setDefault = async (key, domain, filename, rpc, chainId) => {
     if (!fd) {
       return;
     }
-    const status = await fd.setDefault(filename);
-    if (status) {
-      Logger.success("Default file set successfully.");
+    try {
+      const status = await fd.setDefault(filename);
+      if (status) {
+        Logger.success("Default file set successfully.");
+      }
+    } finally {
+      await safeClose(fd)
     }
   } else {
     Logger.error(`Domain ${domain} does not exist.`);
@@ -113,23 +121,19 @@ const remove = async (key, domain, fileName, rpc, chainId) => {
   if (handler?.providerUrl && parseInt(handler?.address) > 0) {
     const { providerUrl, address } = handler;
     Logger.info(`Removing file: ${fileName}`);
-    const provider = new ethers.JsonRpcProvider(providerUrl);
-    const wallet = new ethers.Wallet(key, provider);
-    const prevInfo = await checkBalance(provider, address, wallet.address);
-
     const fd = await createSDK(providerUrl, key, address);
     if (!fd) {
       return;
     }
-    const status = await fd.remove(fileName);
-    if (status) {
-      Logger.success("File removed successfully.");
-    }
 
-    const info = await checkBalance(provider, address, wallet.address);
-    Logger.info(`Domain balance: ${info.domainBalance}`);
-    Logger.info(`Account balance: ${info.accountBalance}`);
-    Logger.info(`Balance change: ${prevInfo.accountBalance - info.accountBalance}`);
+    try {
+      const status = await fd.remove(fileName);
+      if (status) {
+        Logger.success("File removed successfully.");
+      }
+    } finally {
+      await safeClose(fd)
+    }
   } else {
     Logger.error(`Domain ${domain} does not exist.`);
   }
@@ -159,19 +163,24 @@ const download = async (domain, fileName, rpc, chainId) => {
     if (!fd) {
       return;
     }
-    await fd.download(fileName, {
-      onProgress: (progress, count, chunk) => {
-        fs.appendFileSync(savePath, chunk);
-        Logger.log(`Download: progress is ${progress} / ${count}`);
-      },
-      onFail: (e) => {
-        fs.unlink(savePath, () => {});
-        Logger.error(`Download failed for file ${fileName}: ${e.message}`);
-      },
-      onFinish: () => {
-         Logger.success(`File downloaded successfully: ${savePath}`);
-      }
-    });
+    try {
+      await fd.download(fileName, {
+        onProgress: (progress, count, chunk) => {
+          fs.appendFileSync(savePath, chunk);
+          Logger.log(`Download: progress is ${progress} / ${count}`);
+        },
+        onFail: (e) => {
+          fs.unlink(savePath, () => {
+          });
+          Logger.error(`Download failed for file ${fileName}: ${e.message}`);
+        },
+        onFinish: () => {
+          Logger.success(`File downloaded successfully: ${savePath}`);
+        }
+      });
+    } finally {
+      await safeClose(fd)
+    }
   } else {
     Logger.error(`Domain ${domain} does not exist.`);
   }
@@ -235,6 +244,8 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
       // upload
       Logger.log('');
       await upload(uploader, path, gasIncPct, threadPoolSize);
+    } else {
+      await safeClose(uploader);
     }
   } else {
     // upload
@@ -325,8 +336,20 @@ const upload = async (uploader, path, gasIncPct, threadPoolSize) => {
     const length = e.message.length;
     Logger.error(length > 500 ? (e.message.substring(0, 245) + " ... " + e.message.substring(length - 245, length)) : e.message);
     Logger.error(`Execution failed. Please check the error message and try again after making necessary adjustments.`);
+  } finally {
+    await safeClose(uploader);
   }
 };
+
+async function safeClose(instance) {
+  try {
+    if (instance && typeof instance.close === 'function') {
+      await instance.close();
+    }
+  } catch (error) {
+    Logger.error('Error while closing resource:', error);
+  }
+}
 // **** internal function ****
 
 module.exports.upload = estimateAndUpload;
