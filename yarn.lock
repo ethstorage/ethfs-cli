@@ -14,10 +14,32 @@
   dependencies:
     "@noble/hashes" "1.3.2"
 
+"@noble/curves@~1.8.1":
+  version "1.8.1"
+  resolved "https://registry.npmjs.org/@noble/curves/-/curves-1.8.1.tgz#19bc3970e205c99e4bdb1c64a4785706bce497ff"
+  integrity sha512-warwspo+UYUPep0Q+vtdVB4Ugn8GGQj8iyB3gnRWsztmUHTI3S1nhdiWNsPUGL0vud7JlRRk1XEu7Lq1KGTnMQ==
+  dependencies:
+    "@noble/hashes" "1.7.1"
+
 "@noble/hashes@1.3.2":
   version "1.3.2"
   resolved "https://registry.npmjs.org/@noble/hashes/-/hashes-1.3.2.tgz#6f26dbc8fbc7205873ce3cee2f690eba0d421b39"
   integrity sha512-MVC8EAQp7MvEcm30KWENFjgR+Mkmf+D189XJTkFIlwohU5hcBbn1ZkKq7KVTi2Hme3PMGF390DaL52beVrIihQ==
+
+"@noble/hashes@1.7.1", "@noble/hashes@~1.7.1":
+  version "1.7.1"
+  resolved "https://registry.npmjs.org/@noble/hashes/-/hashes-1.7.1.tgz#5738f6d765710921e7a751e00c20ae091ed8db0f"
+  integrity sha512-B8XBPsn4vT/KJAGqDzbwztd+6Yte3P4V7iafm24bxgDe/mlRuK6xmWPuCNrKt2vDafZ8MfJLlchDG/vYafQEjQ==
+
+"@paulmillr/trusted-setups@^0.1.2":
+  version "0.1.2"
+  resolved "https://registry.npmjs.org/@paulmillr/trusted-setups/-/trusted-setups-0.1.2.tgz#cec89fde3b349c7a91e4e6e4900cc8a153715e47"
+  integrity sha512-NKpT0G4Blj+Vp9lbfczb7iPJm3B4njpzX8NXiQs8G51N4CLndCvLqEvksFlTJbNLwl3iwsGZHSvJRdfhfOHLwQ==
+
+"@scure/base@~1.2.2":
+  version "1.2.4"
+  resolved "https://registry.npmjs.org/@scure/base/-/base-1.2.4.tgz#002eb571a35d69bdb4c214d0995dff76a8dcd2a9"
+  integrity sha512-5Yy9czTO47mqz+/J8GM6GIId4umdCk1wc1q8rKERQulIoc8VP9pzDcghv10Tl2E7R96ZUx/PhND3ESYUQX8NuQ==
 
 "@types/node@18.15.13":
   version "18.15.13"
@@ -112,6 +134,11 @@ colors-cli@^1.0.33:
   resolved "https://registry.npmjs.org/colors-cli/-/colors-cli-1.0.33.tgz#22810216e3aaf726b821f6dd3a431a9340ae99cf"
   integrity sha512-PWGsmoJFdOB0t+BeHgmtuoRZUQucOLl5ii81NBzOOGVxlgE04muFNHlR5j8i8MKbOPELBl3243AI6lGBTj5ICQ==
 
+comlink@^4.4.2:
+  version "4.4.2"
+  resolved "https://registry.npmjs.org/comlink/-/comlink-4.4.2.tgz#cbbcd82742fbebc06489c28a183eedc5c60a2bca"
+  integrity sha512-OxGdvBmJuNKSCMO4NTl1L47VRp6xn2wG4F/2hYzB6tiCb709otOxtEYCSvK80PtjODfXXZu8ds+Nw5kVCjqd2g==
+
 commander@^11.1.0:
   version "11.1.0"
   resolved "https://registry.npmjs.org/commander/-/commander-11.1.0.tgz#62fdce76006a68e5c1ab3314dc92e800eb83d906"
@@ -155,16 +182,15 @@ ethers@^6.13.1:
     tslib "2.4.0"
     ws "8.17.1"
 
-ethstorage-sdk@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.npmjs.org/ethstorage-sdk/-/ethstorage-sdk-3.0.0.tgz#fc468b6cb8abb901c2bc05cbcf985cd78559f4e6"
-  integrity sha512-qCoAd5WPU52iRSLuvxCrnVz0H2o0AW2T3vi5JWTx8fKqNFFpKbco0E9Tsr6CywLJ0xFEbY+WX5w5LAFHoElsVw==
+ethstorage-sdk@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.npmjs.org/ethstorage-sdk/-/ethstorage-sdk-3.1.0.tgz#57a4360ed948e5634b1d4031938b47a942ed660b"
+  integrity sha512-sMg+yOqko40ignLHHD8rrhiZiZif5Hnz7OcjapwxTTwDrRaUioy5sZpnPaGvsVN6LT5zHPPlTV3xnOxJl/5cpA==
   dependencies:
     async-mutex "^0.5.0"
     dotenv "^16.4.5"
     ethers "^6.13.1"
-    kzg-wasm "^0.4.0"
-    workerpool "^9.1.3"
+    js-kzg "^1.0.4"
 
 has-flag@^4.0.0:
   version "4.0.0"
@@ -198,6 +224,17 @@ is-unicode-supported@^0.1.0:
   resolved "https://registry.npmjs.org/is-unicode-supported/-/is-unicode-supported-0.1.0.tgz#3f26c76a809593b52bfa2ecb5710ed2779b522a7"
   integrity sha512-knxG2q4UC3u8stRGyAVJCOdxFmv5DZiRcdlIaAQXAbSfJya+OhopNotLQrstBhququ4ZpuKbDc/8S6mgXgPFPw==
 
+js-kzg@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.npmjs.org/js-kzg/-/js-kzg-1.0.4.tgz#5dba2c7a157c3848178592b6666afc06144313ff"
+  integrity sha512-rn5zL47kaWeMJ8CvUCS+nIYNaJPvArUzubeYP5ZznucVR7qXrkE/GgRCmxX2j3xDlkOYbZobWEOvvkv4JoE3ew==
+  dependencies:
+    "@paulmillr/trusted-setups" "^0.1.2"
+    comlink "^4.4.2"
+    kzg-wasm "^0.5.0"
+    micro-eth-signer "^0.14.0"
+    workerpool "^9.2.0"
+
 js-sha3@^0.5.7:
   version "0.5.7"
   resolved "https://registry.npmjs.org/js-sha3/-/js-sha3-0.5.7.tgz#0d4ffd8002d5333aabaf4a23eed2f6374c9f28e7"
@@ -208,10 +245,10 @@ js-sha3@^0.8.0:
   resolved "https://registry.npmjs.org/js-sha3/-/js-sha3-0.8.0.tgz#b9b7a5da73afad7dedd0f8c463954cbde6818840"
   integrity sha512-gF1cRrHhIzNfToc802P800N8PpXS+evLLXfsVpowqmAFR9uwbi89WvXg2QspOmXL8QL86J4T1EpFu+yUkwJY3Q==
 
-kzg-wasm@^0.4.0:
-  version "0.4.0"
-  resolved "https://registry.npmjs.org/kzg-wasm/-/kzg-wasm-0.4.0.tgz#362048470e25fb9683eefa9d2b076283ae653fa0"
-  integrity sha512-hKEwFbKrY1LZnAH5gY8+PlVWfkGnj2wd2tc83eIgzuC4NoshXqplW9OzGlBDqpAmXxwhiN8fgPG2+NcvUIBSwg==
+kzg-wasm@^0.5.0:
+  version "0.5.0"
+  resolved "https://registry.npmjs.org/kzg-wasm/-/kzg-wasm-0.5.0.tgz#6540a1417c2c3d359d1df1b5fd3f49f812bc9302"
+  integrity sha512-LK1M0dm62NKEyhaM6S0pMHKzyAB+KySUlbT+z/+N6fZvcg0jEqSAiz6YHPk8MWIadlT0vFx1uT6Pf9dLzhTn4g==
 
 log-symbols@^4.1.0:
   version "4.1.0"
@@ -220,6 +257,22 @@ log-symbols@^4.1.0:
   dependencies:
     chalk "^4.1.0"
     is-unicode-supported "^0.1.0"
+
+micro-eth-signer@^0.14.0:
+  version "0.14.0"
+  resolved "https://registry.npmjs.org/micro-eth-signer/-/micro-eth-signer-0.14.0.tgz#8aa1fe997d98d6bdf42f2071cef7eb01a66ecb22"
+  integrity sha512-5PLLzHiVYPWClEvZIXXFu5yutzpadb73rnQCpUqIHu3No3coFuWQNfE5tkBQJ7djuLYl6aRLaS0MgWJYGoqiBw==
+  dependencies:
+    "@noble/curves" "~1.8.1"
+    "@noble/hashes" "~1.7.1"
+    micro-packed "~0.7.2"
+
+micro-packed@~0.7.2:
+  version "0.7.2"
+  resolved "https://registry.npmjs.org/micro-packed/-/micro-packed-0.7.2.tgz#7f9decd6c11fe2617bc85ad4ebc0ad48bf423f36"
+  integrity sha512-HJ/u8+tMzgrJVAl6P/4l8KGjJSA3SCZaRb1m4wpbovNScCSmVOGUYbkkcoPPcknCHWPpRAdjy+yqXqyQWf+k8g==
+  dependencies:
+    "@scure/base" "~1.2.2"
 
 mimic-fn@^2.1.0:
   version "2.1.0"
@@ -330,10 +383,10 @@ wcwidth@^1.0.1:
   dependencies:
     defaults "^1.0.3"
 
-workerpool@^9.1.3:
-  version "9.1.3"
-  resolved "https://registry.npmjs.org/workerpool/-/workerpool-9.1.3.tgz#34b81f50f777a0e549c6dfaa0926575735e3f4b4"
-  integrity sha512-LhUrk4tbxJRDQmRrrFWA9EnboXI79fe0ZNTy3u8m+dqPN1EkVSIsQYAB8OF/fkyhG8Rtup+c/bzj/+bzbG8fqg==
+workerpool@^9.2.0:
+  version "9.2.0"
+  resolved "https://registry.npmjs.org/workerpool/-/workerpool-9.2.0.tgz#f74427cbb61234708332ed8ab9cbf56dcb1c4371"
+  integrity sha512-PKZqBOCo6CYkVOwAxWxQaSF2Fvb5Iv2fCeTP7buyWI2GiynWr46NcXSgK/idoV6e60dgCBfgYc+Un3HMvmqP8w==
 
 ws@8.17.1:
   version "8.17.1"
