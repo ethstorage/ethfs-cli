@@ -232,7 +232,7 @@ const createSDK = async (rpc, privateKey, address, ethStorageRpc) => {
     return await FlatDirectory.create({ rpc, privateKey, address, ethStorageRpc });
   } catch (e) {
     if (e.message.includes('The current SDK does not support this contract')) {
-      Logger.error("Failed to query contract. Please check your network settings or install ethfs-cli 2.x if the contract was created with it.");
+      Logger.error("Failed to query contract. Please check your network settings or install ethfs-cli 1.x if the contract was created with it.");
     } else {
       Logger.error(`SDK initialization failed, Please check your parameters and network connection, and try again.  info=${e.message}`);
     }
