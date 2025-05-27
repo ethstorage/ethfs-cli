@@ -19,7 +19,7 @@
     "dotenv": "^16.4.7",
     "eth-ens-namehash": "^2.0.8",
     "ethers": "^6.13.1",
-    "ethstorage-sdk": "^3.1.0",
+    "ethstorage-sdk": "^3.1.1",
     "js-sha3": "^0.8.0",
     "ora": "^5.4.1",
     "rxjs": "^7.8.1"

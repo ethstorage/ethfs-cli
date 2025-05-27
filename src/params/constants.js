@@ -81,7 +81,7 @@ const NETWORK_MAPPING = {
 const PROVIDER_URLS = {
     [ETHEREUM_CHAIN_ID]: 'https://ethereum.publicnode.com',
     [GOERLI_CHAIN_ID]: 'https://rpc.ankr.com/eth_goerli',
-    [SEPOLIA_CHAIN_ID]: 'http://88.99.30.186:8545/',
+    [SEPOLIA_CHAIN_ID]: 'http://65.108.230.142:8545/',
     [OPTIMISTIC_CHAIN_ID]: 'https://mainnet.optimism.io',
     [ARBITRUM_CHAIN_ID]: 'https://arb1.arbitrum.io/rpc',
     [OPTIMISTIC_GOERLI_CHAIN_ID]: 'https://goerli.optimism.io',
@@ -116,8 +116,8 @@ const ETH_STORAGE_ADDRESS = {
     [QUARKCHAIN_L2_TESTNET_CHAIN_ID]: '0x64003adbdf3014f7E38FC6BE752EB047b95da89A',
 }
 const ETH_STORAGE_RPC = {
-    [SEPOLIA_CHAIN_ID]: 'http://65.108.236.27:9540',
-    [QUARKCHAIN_L2_TESTNET_CHAIN_ID]: 'http://65.109.115.36:9596',
+    [SEPOLIA_CHAIN_ID]: 'http://65.108.230.142:9545',
+    [QUARKCHAIN_L2_TESTNET_CHAIN_ID]: 'https://rpc.beta.testnet.l2.ethstorage.io:9596',
 }
 
 const TYPE_CALLDATA = 'calldata';
