@@ -1,13 +1,12 @@
 const { from, mergeMap, map, scan, filter } = require('rxjs');
 const {
-    FlatDirectory,
     UploadType,
     OP_BLOB_DATA_SIZE,
     MAX_CHUNKS
 } = require("ethstorage-sdk");
 const {NodeFile} = require("ethstorage-sdk/file");
 
-const { recursiveFiles } = require('./utils');
+const { recursiveFiles, createSDK } = require('./utils');
 const { Logger } = require('./log');
 
 
@@ -34,20 +33,12 @@ class Uploader {
     }
 
     async #init(pk, rpc, chainId, contractAddress, uploadType) {
-        this.#chainId = chainId;
-        try {
-            this.#flatDirectory = await FlatDirectory.create({
-                rpc: rpc, privateKey: pk, address: contractAddress
-            });
-        } catch (e) {
-            if (e.message.includes('The current SDK does not support this contract')) {
-                Logger.error("Failed to query contract. The contract was created with ethfs-cli 1.x and is not compatible with version 2.0. Please switch back to ethfs-cli 1.x to access this contract.");
-            } else {
-                Logger.error(`SDK initialization failed, Please check your parameters and network connection, and try again.  info=${e.message}`);
-            }
+        this.#flatDirectory = await createSDK(rpc, pk, contractAddress);
+        if (!this.#flatDirectory) {
             return false;
         }
 
+        this.#chainId = chainId;
         if (uploadType) {
             // check upload type
             if (!this.#flatDirectory.isSupportBlob && uploadType === UploadType.Blob) {

@@ -12,6 +12,7 @@ const {
     ResolverAbi,
 } = require('../params');
 const { Logger } = require('./log');
+const { FlatDirectory } = require("ethstorage-sdk");
 
 function isPrivateKey(key) {
     try {
@@ -204,10 +205,39 @@ function recursiveFiles(path, basePath) {
     return filePools;
 }
 
+const createSDK = async (rpc, privateKey, address, ethStorageRpc) => {
+    try {
+        return await FlatDirectory.create({ rpc, privateKey, address, ethStorageRpc });
+    } catch (e) {
+        if (e.message.includes('The current SDK no longer supports this contract version')) {
+            const match = e.message.match(/\(([\d\.]+)\)/);
+            const contractVersion = match ? match[1] : 'unknown';
+
+            let cliSuggestion;
+            if (contractVersion === '1.0.0') {
+                cliSuggestion = 'ethfs-cli v2.0';
+            } else {
+                cliSuggestion = 'ethfs-cli v1.x';
+            }
+
+            Logger.error(
+                `Failed to initialize SDK: The contract version (${contractVersion}) is not supported.\n` +
+                `Please either:\n` +
+                `  1) Deploy a new compatible contract, or\n` +
+                `  2) Use ${cliSuggestion} to interact with this contract.`
+            );
+        } else {
+            Logger.error(`SDK initialization failed. Please check parameters/network. info=${e.message}`);
+        }
+        return null;
+    }
+}
+
 module.exports = {
     isPrivateKey,
     getChainIdByRpc,
     getWebHandler,
     checkBalance,
-    recursiveFiles
+    recursiveFiles,
+    createSDK
 }
