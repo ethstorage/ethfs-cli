@@ -111,7 +111,7 @@ const NS_ADDRESS = {
 }
 
 const ETH_STORAGE_RPC = {
-    [SEPOLIA_CHAIN_ID]: 'http://65.108.230.142:9546',
+    [SEPOLIA_CHAIN_ID]: 'https://rpc.testnet.ethstorage.io:9546',
     [QUARKCHAIN_L2_TESTNET_CHAIN_ID]: 'https://rpc.beta.testnet.l2.ethstorage.io:9596',
 }
 
