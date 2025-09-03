@@ -19,7 +19,8 @@ const {
   getChainIdByRpc,
   getWebHandler,
   Uploader,
-  Logger
+  Logger,
+  createSDK
 } = require('./utils');
 
 const color = require('colors-cli/safe');
@@ -212,7 +213,10 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
 
   // query total cost
   const uploader = await Uploader.create(key, handler.providerUrl, handler.chainId, handler.address, type);
-  if (!uploader) return;
+  if (!uploader) {
+    process.exit(1);
+    return;
+  }
 
   if (estimateGas) {
     // get cost
@@ -227,18 +231,6 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
 // **** external function ****
 
 // **** internal function ****
-const createSDK = async (rpc, privateKey, address, ethStorageRpc) => {
-  try {
-    return await FlatDirectory.create({ rpc, privateKey, address, ethStorageRpc });
-  } catch (e) {
-    if (e.message.includes('The current SDK does not support this contract')) {
-      Logger.error("Failed to query contract. The contract was created with ethfs-cli 1.x and is not compatible with version 2.0. Please switch back to ethfs-cli 1.x to access this contract.");
-    } else {
-      Logger.error(`SDK initialization failed, Please check your parameters and network connection, and try again.  info=${e.message}`);
-    }
-    return null;
-  }
-}
 
 const answer = async (text) => {
   return new Promise((resolve) => {
