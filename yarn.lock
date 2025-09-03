@@ -161,14 +161,6 @@ dotenv@^16.4.7:
   resolved "https://registry.npmjs.org/dotenv/-/dotenv-16.4.7.tgz#0e20c5b82950140aa99be360a8a5f52335f53c26"
   integrity sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==
 
-eth-ens-namehash@^2.0.8:
-  version "2.0.8"
-  resolved "https://registry.npmjs.org/eth-ens-namehash/-/eth-ens-namehash-2.0.8.tgz#229ac46eca86d52e0c991e7cb2aef83ff0f68bcf"
-  integrity sha512-VWEI1+KJfz4Km//dadyvBBoBeSQ0MHTXPvr8UIXiLW6IanxvAV+DmlZAijZwAyggqGUfwQBeHf7tc9wzc1piSw==
-  dependencies:
-    idna-uts46-hx "^2.3.1"
-    js-sha3 "^0.5.7"
-
 ethers@^6.13.1:
   version "6.13.1"
   resolved "https://registry.npmjs.org/ethers/-/ethers-6.13.1.tgz#2b9f9c7455cde9d38b30fe6589972eb083652961"
@@ -182,10 +174,10 @@ ethers@^6.13.1:
     tslib "2.4.0"
     ws "8.17.1"
 
-ethstorage-sdk@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.npmjs.org/ethstorage-sdk/-/ethstorage-sdk-4.0.0.tgz#565a29edbf2a5fab40921a051af827132fd8023d"
-  integrity sha512-Z+b6BsEFnq+kF9Wg4RLxQltuzAfIEU/lQsToLBYWxMIz3wRgURd5S0So+7YKPrBlkDHqU9nAchguXwowCuLaYA==
+ethstorage-sdk@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.npmjs.org/ethstorage-sdk/-/ethstorage-sdk-4.0.1.tgz#2f9b2bea20b422e79113ce6b3ed608b68d35b3c0"
+  integrity sha512-dIS3Px/HZG/moQh8TGsfMyTEIuqeRKOqZCxEq67vv6SqyB35wqDMVY+jwcoKeIVh4RVJfMjTXreLjXON9OawMg==
   dependencies:
     async-mutex "^0.5.0"
     dotenv "^16.4.5"
@@ -196,13 +188,6 @@ has-flag@^4.0.0:
   version "4.0.0"
   resolved "https://registry.npmjs.org/has-flag/-/has-flag-4.0.0.tgz#944771fd9c81c81265c4d6941860da06bb59479b"
   integrity sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==
-
-idna-uts46-hx@^2.3.1:
-  version "2.3.1"
-  resolved "https://registry.npmjs.org/idna-uts46-hx/-/idna-uts46-hx-2.3.1.tgz#a1dc5c4df37eee522bf66d969cc980e00e8711f9"
-  integrity sha512-PWoF9Keq6laYdIRwwCdhTPl60xRqAloYNMQLiyUnG42VjT53oW07BXIRM+NK7eQjzXjAk2gUvX9caRxlnF9TAA==
-  dependencies:
-    punycode "2.1.0"
 
 ieee754@^1.1.13:
   version "1.2.1"
@@ -234,16 +219,6 @@ js-kzg@^1.0.4:
     kzg-wasm "^0.5.0"
     micro-eth-signer "^0.14.0"
     workerpool "^9.2.0"
-
-js-sha3@^0.5.7:
-  version "0.5.7"
-  resolved "https://registry.npmjs.org/js-sha3/-/js-sha3-0.5.7.tgz#0d4ffd8002d5333aabaf4a23eed2f6374c9f28e7"
-  integrity sha512-GII20kjaPX0zJ8wzkTbNDYMY7msuZcTWk8S5UOh6806Jq/wz1J8/bnr8uGU0DAUmYDjj2Mr4X1cW8v/GLYnR+g==
-
-js-sha3@^0.8.0:
-  version "0.8.0"
-  resolved "https://registry.npmjs.org/js-sha3/-/js-sha3-0.8.0.tgz#b9b7a5da73afad7dedd0f8c463954cbde6818840"
-  integrity sha512-gF1cRrHhIzNfToc802P800N8PpXS+evLLXfsVpowqmAFR9uwbi89WvXg2QspOmXL8QL86J4T1EpFu+yUkwJY3Q==
 
 kzg-wasm@^0.5.0:
   version "0.5.0"
@@ -300,11 +275,6 @@ ora@^5.4.1:
     log-symbols "^4.1.0"
     strip-ansi "^6.0.0"
     wcwidth "^1.0.1"
-
-punycode@2.1.0:
-  version "2.1.0"
-  resolved "https://registry.npmjs.org/punycode/-/punycode-2.1.0.tgz#5f863edc89b96db09074bad7947bf09056ca4e7d"
-  integrity sha512-Yxz2kRwT90aPiWEMHVYnEf4+rhwF1tBmmZ4KepCP+Wkium9JxtWnUm1nqGwpiAHr/tnTSeHqr3wb++jgSkXjhA==
 
 readable-stream@^3.4.0:
   version "3.6.2"

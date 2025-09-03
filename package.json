@@ -1,6 +1,6 @@
 {
   "name": "ethfs-cli",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "description": "A tool to upload files easily to a filesystem smart contract following ERC-5018.",
   "main": "cli.js",
   "scripts": {
@@ -17,10 +17,8 @@
     "colors-cli": "^1.0.33",
     "commander": "^11.1.0",
     "dotenv": "^16.4.7",
-    "eth-ens-namehash": "^2.0.8",
     "ethers": "^6.13.1",
-    "ethstorage-sdk": "^4.0.0",
-    "js-sha3": "^0.8.0",
+    "ethstorage-sdk": "^4.0.1",
     "ora": "^5.4.1",
     "rxjs": "^7.8.1"
   },

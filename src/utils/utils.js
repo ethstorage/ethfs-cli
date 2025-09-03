@@ -1,12 +1,9 @@
 const fs = require("fs");
 const {ethers} = require("ethers");
-const {normalize} = require("eth-ens-namehash");
-const {keccak_256: sha3} = require("js-sha3");
 const {
     NETWORK_MAPPING,
     PROVIDER_URLS,
     NS_ADDRESS,
-    GALILEO_CHAIN_ID,
 
     NSAbi,
     ResolverAbi,
@@ -23,24 +20,6 @@ function isPrivateKey(key) {
     } catch (error) {
         return false;
     }
-}
-
-function namehash(inputName) {
-    let node = ''
-    for (let i = 0; i < 32; i++) {
-        node += '00'
-    }
-
-    if (inputName) {
-        const labels = inputName.split('.');
-        for (let i = labels.length - 1; i >= 0; i--) {
-            let normalisedLabel = normalize(labels[i])
-            let labelSha = sha3(normalisedLabel)
-            node = sha3(Buffer.from(node + labelSha, 'hex'))
-        }
-    }
-
-    return '0x' + node
 }
 
 async function getChainIdByRpc(rpc) {
@@ -95,9 +74,6 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) 
         chainId = rpcChainId;
     } else {
         chainId = defaultChainId;
-        if (address.endsWith(".w3q")) {
-            chainId = GALILEO_CHAIN_ID;
-        }
     }
 
     // get rpc
@@ -117,7 +93,7 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) 
         return { providerUrl, chainId, address };
     }
 
-    // .w3q or .eth domain
+    // .eth domain
     let nameServiceContract = NS_ADDRESS[chainId];
     if (!nameServiceContract) {
         Logger.error(`Name Service not supported for domain ${domain}.`);
@@ -126,15 +102,11 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) 
     let webHandler;
     const provider = new ethers.JsonRpcProvider(providerUrl);
     try {
-        const nameHash = namehash(address);
+        const nameHash = ethers.namehash(address);
         const nsContract = new ethers.Contract(nameServiceContract, NSAbi, provider);
         const resolver = await nsContract.resolver(nameHash);
         const resolverContract = new ethers.Contract(resolver, ResolverAbi, provider);
-        if (chainId === GALILEO_CHAIN_ID) {
-            webHandler = await resolverContract.webHandler(nameHash);
-        } else {
-            webHandler = await resolverContract.text(nameHash, "contentcontract");
-        }
+        webHandler = await resolverContract.text(nameHash, "contentcontract");
     } catch (e) {
         Logger.error(`Unable to resolve domain ${domain}.`);
         return;
@@ -151,23 +123,30 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) 
     const short = webHandler.split(":");
     let shortAdd, shortName;
     if (short.length > 1) {
-        shortName = domains[0];
-        shortAdd = domains[1];
-    } else {
-        Logger.error(`Invalid web handler format: ${webHandler}.`);
-        return;
+        shortName = short[0];
+        shortAdd = short[1];
+        if (!ethAddrReg.test(shortAdd)) {
+            Logger.error(`Invalid Ethereum address: ${shortAdd}`);
+            return;
+        }
+        const newChainId = NETWORK_MAPPING[shortName];
+        if (!newChainId) {
+            Logger.error(`Unknown network: ${shortName}`);
+            return;
+        }
+
+        providerUrl = chainId === newChainId ? providerUrl : PROVIDER_URLS[newChainId];
+        Logger.info(`Provider URL: ${providerUrl}`);
+        Logger.info(`Chain ID: ${newChainId}`);
+        Logger.info(`Address: ${shortAdd}`);
+        if (isBr) Logger.log('');
+        return {
+            providerUrl: providerUrl,
+            chainId: newChainId,
+            address: shortAdd
+        };
     }
-    const newChainId = NETWORK_MAPPING[shortName];
-    providerUrl = chainId === newChainId ? providerUrl : PROVIDER_URLS[newChainId];
-    Logger.info(`Provider URL: ${providerUrl}`);
-    Logger.info(`Chain ID: ${newChainId}`);
-    Logger.info(`Address: ${shortAdd}`);
-    if (isBr) Logger.log('');
-    return {
-        providerUrl: providerUrl,
-        chainId: newChainId,
-        address: shortAdd
-    };
+    Logger.error(`Invalid web handler format: ${webHandler}.`);
 }
 
 async function checkBalance(provider, domainAddr, accountAddr) {
