@@ -1,7 +1,5 @@
 const fs = require("fs");
 const {ethers} = require("ethers");
-const {normalize} = require("eth-ens-namehash");
-const {keccak_256: sha3} = require("js-sha3");
 const {
     NETWORK_MAPPING,
     PROVIDER_URLS,
@@ -23,24 +21,6 @@ function isPrivateKey(key) {
     } catch (error) {
         return false;
     }
-}
-
-function namehash(inputName) {
-    let node = ''
-    for (let i = 0; i < 32; i++) {
-        node += '00'
-    }
-
-    if (inputName) {
-        const labels = inputName.split('.');
-        for (let i = labels.length - 1; i >= 0; i--) {
-            let normalisedLabel = normalize(labels[i])
-            let labelSha = sha3(normalisedLabel)
-            node = sha3(Buffer.from(node + labelSha, 'hex'))
-        }
-    }
-
-    return '0x' + node
 }
 
 async function getChainIdByRpc(rpc) {
@@ -126,7 +106,7 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) 
     let webHandler;
     const provider = new ethers.JsonRpcProvider(providerUrl);
     try {
-        const nameHash = namehash(address);
+        const nameHash = ethers.namehash(address);
         const nsContract = new ethers.Contract(nameServiceContract, NSAbi, provider);
         const resolver = await nsContract.resolver(nameHash);
         const resolverContract = new ethers.Contract(resolver, ResolverAbi, provider);
