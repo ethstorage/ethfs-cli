@@ -136,8 +136,8 @@ const download = async (domain, fileName, rpc, chainId) => {
     return;
   }
 
-  const handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT);
-  if (!handler || parseInt(handler?.address) <= 0) return Logger.error(`Domain ${domain} does not exist.`);
+  const handler = await getHandler(domain, rpc, chainId, false);
+  if (!handler) return;
 
   const savePath = path.join(process.cwd(), fileName);
   fs.existsSync(path.dirname(savePath)) || fs.mkdirSync(path.dirname(savePath));
@@ -212,7 +212,7 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
   Logger.log('');
 
   // query total cost
-  const uploader = await Uploader.create(key, handler.providerUrl, handler.chainId, handler.address, type);
+  const uploader = await Uploader.create(key, handler.providerUrl, handler.address, type);
   if (!uploader) {
     process.exit(1);
     return;
@@ -309,8 +309,7 @@ const safeClose = async (instance) => {
 
 const getHandler = async (domain, rpc, chainId, isBr = true) => {
   const handler = await getWebHandler(domain, rpc, chainId, CHAIN_ID_DEFAULT, isBr);
-  if (!handler?.providerUrl || parseInt(handler?.address) <= 0) {
-    Logger.error(`Domain ${domain} does not exist.`);
+  if (handler && !handler?.providerUrl || parseInt(handler?.address) <= 0) {
     return null;
   }
   return handler;

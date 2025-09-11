@@ -19,26 +19,24 @@ class UploadError extends Error {
 }
 
 class Uploader {
-    #chainId;
     #flatDirectory;
     #uploadType;
 
-    static async create(pk, rpc, chainId, contractAddress, uploadType) {
+    static async create(pk, rpc, contractAddress, uploadType) {
         const uploader = new Uploader();
-        const status = await uploader.#init(pk, rpc, chainId, contractAddress, uploadType);
+        const status = await uploader.#init(pk, rpc, contractAddress, uploadType);
         if (status) {
             return uploader;
         }
         return null;
     }
 
-    async #init(pk, rpc, chainId, contractAddress, uploadType) {
+    async #init(pk, rpc, contractAddress, uploadType) {
         this.#flatDirectory = await createSDK(rpc, pk, contractAddress);
         if (!this.#flatDirectory) {
             return false;
         }
 
-        this.#chainId = chainId;
         if (uploadType) {
             // check upload type
             if (!this.#flatDirectory.isSupportBlob && uploadType === UploadType.Blob) {
