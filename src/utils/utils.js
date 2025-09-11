@@ -4,6 +4,7 @@ const {
     NETWORK_MAPPING,
     PROVIDER_URLS,
     NS_ADDRESS,
+    ETH_STORAGE_NETWORK_MAPPING,
 
     NSAbi,
     ResolverAbi,
@@ -120,6 +121,8 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) 
         if (isBr) Logger.log('');
         return { providerUrl, chainId, address: webHandler };
     }
+
+    //  short name, eg: es-m:0x111.1111
     const short = webHandler.split(":");
     let shortAdd, shortName;
     if (short.length > 1) {
@@ -129,13 +132,21 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) 
             Logger.error(`Invalid Ethereum address: ${shortAdd}`);
             return;
         }
-        const newChainId = NETWORK_MAPPING[shortName];
+        let newChainId = NETWORK_MAPPING[shortName];
         if (!newChainId) {
-            Logger.error(`Unknown network: ${shortName}`);
-            return;
+            // If the short name configured in ens is ethstorage, it is mapped to the corresponding main chain.
+            newChainId = ETH_STORAGE_NETWORK_MAPPING[shortName];
+            if (!newChainId) {
+                Logger.error(`Unknown network: ${shortName}`);
+                return;
+            }
         }
 
         providerUrl = chainId === newChainId ? providerUrl : PROVIDER_URLS[newChainId];
+        if (!providerUrl) {
+            Logger.error(`No RPC found for chainId ${chainId}. Please provide a valid RPC.`);
+            return;
+        }
         Logger.info(`Provider URL: ${providerUrl}`);
         Logger.info(`Chain ID: ${newChainId}`);
         Logger.info(`Address: ${shortAdd}`);
