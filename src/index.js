@@ -271,10 +271,10 @@ const upload = async (uploader, path, gasIncPct, threadPoolSize) => {
   try {
     const infoArr = await uploader.upload(path, gasIncPct, threadPoolSize);
     Logger.log('');
-    let totalStorageCost = 0n, totalChunkCount = 0, totalDataSize = 0;
+    let totalCost = 0n, totalChunkCount = 0, totalDataSize = 0;
     for (const file of infoArr) {
       if (file.currentSuccessIndex >= 0) {
-        totalStorageCost += file.totalStorageCost;
+        totalCost += file.totalStorageCost;
         totalChunkCount += file.totalUploadCount;
         totalDataSize += file.totalUploadSize;
         if (file.totalChunkCount > file.currentSuccessIndex + 1) {
@@ -289,7 +289,7 @@ const upload = async (uploader, path, gasIncPct, threadPoolSize) => {
     Logger.success(`Total files: ${infoArr.length}`);
     Logger.success(`Total chunks uploaded: ${totalChunkCount}`);
     Logger.success(`Total data uploaded: ${totalDataSize} KB`);
-    Logger.success(`Total storage cost: ${ethers.formatEther(totalStorageCost)} ETH`);
+    Logger.success(`Total cost: ${ethers.formatEther(totalCost)} ETH`);
   } catch (e) {
     const length = e.message.length;
     Logger.error(length > 500 ? (e.message.substring(0, 245) + " ... " + e.message.substring(length - 245, length)) : e.message);
