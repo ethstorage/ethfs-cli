@@ -108,7 +108,7 @@ Upload files, you need to specify the upload type. The default type is blob:2.<b
 If you want to use name instead of FlatDirectory address, the name should be pointed to the FlatDirectory 
 address in advance. Click [here](https://docs.web3url.io/tutorials-on-ethstorage-early-testnet/bind-domain-names-to-your-flatdirectory) for details.
 ```
-ethfs-cli upload -f <address|domain> -a <address> -p <private-key> -t [upload-type] -c [chain-id] -r [rpc] -g [gas-price-increase-percentage] -e [estimate-gas] -s [thread-pool-size]
+ethfs-cli upload -f <file|directory> -a <address> -p <private-key> -t [upload-type] -c [chain-id] -r [rpc] -g [gas-price-increase-percentage] -e [estimate-gas] -s [thread-pool-size]
 ```
 ##### Example
 ```
