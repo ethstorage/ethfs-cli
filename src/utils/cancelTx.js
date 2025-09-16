@@ -23,7 +23,7 @@ async function checkPendingTxs(rpc, privateKey) {
 	};
 }
 
-async function sendReplacementTx(wallet, baseTx, type, options = {}, attempt = 1, maxAttempts = 5) {
+async function sendReplacementTx(wallet, baseTx, type, options = {}, attempt = 2, maxAttempts = 5) {
 	const multiplier = BigInt(attempt);
 	try {
 		let tx;
@@ -48,29 +48,29 @@ async function sendReplacementTx(wallet, baseTx, type, options = {}, attempt = 1
 		}
 
 		const response = await wallet.sendTransaction(tx);
-		Logger.log(`📤 Replacement tx sent (attempt ${attempt}) nonce=${tx.nonce} hash=${response.hash}`);
+		Logger.log(`📤 Replacement tx sent (attempt ${attempt}) nonce:${tx.nonce} hash:${response.hash}`);
 		await response.wait();
-		Logger.log(`✅ Replacement confirmed for nonce ${tx.nonce}`);
+		Logger.log(`✅  Replacement confirmed for nonce ${tx.nonce}`);
 	} catch (err) {
 		const msg = err.message || JSON.stringify(err);
 
 		// case 1
 		if (msg.includes("nonce has already been used")) {
-			Logger.log(`Nonce ${baseTx.nonce} already confirmed, skipping replacement.`);
+			Logger.log(`✅  Nonce ${baseTx.nonce} already confirmed, skipping replacement.`);
 			return null;
 		}
 
 		// case 2: Gas too low, retry gradually
 		if (msg.includes("replacement transaction underpriced")) {
 			if (attempt < maxAttempts) {
-				return sendReplacementTx(wallet, baseTx, type, options, attempt + 1, maxAttempts);
+				return sendReplacementTx(wallet, baseTx, type, options, attempt + 1);
 			}
 		}
 
 		// case 3
-		if (msg.includes("address already reserved")) {
+		if (msg.includes("address already reserved") && type === 3) {
 			Logger.error(`Type conflict for nonce ${baseTx.nonce}, retrying with tx type=2`);
-			return sendReplacementTx(wallet, baseTx, 2, {}, attempt + 1, maxAttempts);
+			return sendReplacementTx(wallet, baseTx, 2, {});
 		}
 
 		throw new Error(`❌ Replacement failed after ${attempt} attempts for nonce ${baseTx.nonce}: ${msg}`);
