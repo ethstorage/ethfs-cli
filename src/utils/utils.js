@@ -160,20 +160,6 @@ async function getWebHandler(domain, rpc, chainId, defaultChainId, isBr = true) 
     Logger.error(`Invalid web handler format: ${webHandler}.`);
 }
 
-async function checkBalance(provider, domainAddr, accountAddr) {
-    return Promise.all([
-        provider.getBalance(domainAddr),
-        provider.getBalance(accountAddr)
-    ]).then(values => {
-        return {
-            domainBalance: values[0],
-            accountBalance: values[1]
-        };
-    }, reason => {
-        Logger.error(`Balance check failed: ${reason}`);
-    });
-}
-
 function recursiveFiles(path, basePath) {
     let filePools = [];
     const fileStat = fs.statSync(path);
@@ -195,7 +181,7 @@ function recursiveFiles(path, basePath) {
     return filePools;
 }
 
-const createSDK = async (rpc, privateKey, address, ethStorageRpc) => {
+async function createSDK(rpc, privateKey, address, ethStorageRpc) {
     try {
         return await FlatDirectory.create({ rpc, privateKey, address, ethStorageRpc });
     } catch (e) {
@@ -227,7 +213,6 @@ module.exports = {
     isPrivateKey,
     getChainIdByRpc,
     getWebHandler,
-    checkBalance,
     recursiveFiles,
     createSDK
 }

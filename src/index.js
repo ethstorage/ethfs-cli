@@ -20,7 +20,9 @@ const {
   getWebHandler,
   Uploader,
   Logger,
-  createSDK
+  createSDK,
+  checkPendingTxs,
+  cancelPendingTx
 } = require('./utils');
 
 const color = require('colors-cli/safe');
@@ -211,6 +213,17 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
   Logger.info(`Thread pool size: ${threadPoolSize}`);
   Logger.log('');
 
+  const pendingResult = await checkPendingTxs(handler.providerUrl, key);
+  if (pendingResult.pendingCount > 0) {
+    const confirmed = await answer(
+        `⚠️ Address ${pendingResult.address} has ${pendingResult.pendingCount} pending tx(s). Do you want to cancel ALL pending txs?`,
+        false
+    );
+    if (confirmed) {
+      await cancelPendingTx(handler.providerUrl, key);
+    }
+  }
+
   // query total cost
   const uploader = await Uploader.create(key, handler.providerUrl, handler.address, type);
   if (!uploader) {
@@ -232,19 +245,24 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
 
 // **** internal function ****
 
-const answer = async (text) => {
+const answer = async (text, defaultYes = true) => {
   return new Promise((resolve) => {
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout
     });
 
-    rl.question(text + ' (y/n) ', (answer) => {
+    const hint = defaultYes ? '[Y/n]' : '[y/N]';
+    rl.question(`${text} ${hint}: `, (ans) => {
       rl.close();
-      resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'Y' || answer.toLowerCase() === '');
+
+      const normalized = ans.trim().toLowerCase();
+      if (normalized === '') return resolve(defaultYes);
+      resolve(normalized === 'y' || normalized === 'yes');
     });
   });
-}
+};
+
 
 const estimateCost = async (uploader, path, gasIncPct, threadPoolSize) => {
   const spin = ora('Start estimating cost').start();
