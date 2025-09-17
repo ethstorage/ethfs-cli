@@ -199,6 +199,10 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
       return;
     }
   }
+  if (gasIncPct) {
+    gasIncPct = Number(gasIncPct);
+    if (isNaN(gasIncPct)) gasIncPct = 0;
+  }
 
   const handler = await getHandler(domain, rpc, chainId, false);
   if (!handler) return;
@@ -302,10 +306,13 @@ const upload = async (uploader, path, gasIncPct, batchFetchLimit, fileUploadLimi
       // replace error
       Logger.multi([
         { color: 'error', text: '❌️ Pending transaction detected for this wallet. \n' },
-        { color: 'error', text: "You are sending a replacement transaction, but the default gas is too low to override the queued tx. Increase 'gasIncPct' to raise gas (recommended: " },
-        { color: 'info', text: "10 ~ 50" },
-        { color: 'error', text: " ). \n" },
-        { color: 'warning', text: 'Note: subsequent transactions will use this gas increase until you change it. \n' }
+        { color: 'error', text: "Your replacement transaction cannot override the queued tx because the gas is too low.\n" },
+        { color: 'error', text: "👉 Please restart the command with " },
+        { color: 'success', text: "'-g <value>' " },
+        { color: 'error', text: "to increase gas (recommended: " },
+        { color: 'success', text: "100 ~ 200" },
+        { color: 'error', text: ").\n" },
+        { color: 'warning', text: 'Note: subsequent transactions will keep using this gas increase until you change it. \n' }
       ]);
     } else {
       const length = e.message.length;
