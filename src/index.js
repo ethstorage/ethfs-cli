@@ -11,6 +11,8 @@ const {
   TYPE_CALLDATA,
   TYPE_BLOB,
   QUARKCHAIN_L2_TESTNET_CHAIN_ID,
+  SEPOLIA_CHAIN_ID,
+  DEFAULT_THREAD_POOL_SIZE_ONE,
   DEFAULT_THREAD_POOL_SIZE_LOW,
   DEFAULT_THREAD_POOL_SIZE_HIGH
 } = require('./params');
@@ -201,14 +203,19 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
   const handler = await getHandler(domain, rpc, chainId, false);
   if (!handler) return;
 
+  // Batch processing limit
+  let batchFetchLimit, fileUploadLimit;
   if (threadPoolSize) {
-    threadPoolSize = Number(threadPoolSize);
+    batchFetchLimit = fileUploadLimit = Number(threadPoolSize);
   } else if (handler.chainId === QUARKCHAIN_L2_TESTNET_CHAIN_ID) {
-    threadPoolSize = DEFAULT_THREAD_POOL_SIZE_HIGH;
+    batchFetchLimit = fileUploadLimit = DEFAULT_THREAD_POOL_SIZE_HIGH;
+  } else if (handler.chainId === ETHEREUM_CHAIN_ID || handler.chainId === SEPOLIA_CHAIN_ID) {
+    batchFetchLimit = DEFAULT_THREAD_POOL_SIZE_LOW;
+    fileUploadLimit = DEFAULT_THREAD_POOL_SIZE_ONE;
   } else {
-    threadPoolSize = DEFAULT_THREAD_POOL_SIZE_LOW;
+    batchFetchLimit = fileUploadLimit = DEFAULT_THREAD_POOL_SIZE_LOW;
   }
-  Logger.info(`Thread pool size: ${threadPoolSize}`);
+  Logger.info(`Thread pool size: ${fileUploadLimit}`);
   Logger.log('');
 
   // query total cost
@@ -220,12 +227,12 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
 
   if (estimateGas) {
     // get cost
-    await estimateCost(uploader, path, gasIncPct, threadPoolSize);
+    await estimateCost(uploader, path, gasIncPct, batchFetchLimit);
     if (!(await answer("Continue?"))) return await safeClose(uploader);
   }
 
   // upload
-  await upload(uploader, path, gasIncPct, threadPoolSize);
+  await upload(uploader, path, gasIncPct, batchFetchLimit, fileUploadLimit);
   process.exit(0);
 }
 // **** external function ****
@@ -267,9 +274,9 @@ const estimateCost = async (uploader, path, gasIncPct, threadPoolSize) => {
   }
 }
 
-const upload = async (uploader, path, gasIncPct, threadPoolSize) => {
+const upload = async (uploader, path, gasIncPct, batchFetchLimit, fileUploadLimit) => {
   try {
-    const infoArr = await uploader.upload(path, gasIncPct, threadPoolSize);
+    const infoArr = await uploader.upload(path, gasIncPct, batchFetchLimit, fileUploadLimit);
     Logger.log('');
     let totalCost = 0n, totalChunkCount = 0, totalDataSize = 0;
     for (const file of infoArr) {
@@ -291,9 +298,20 @@ const upload = async (uploader, path, gasIncPct, threadPoolSize) => {
     Logger.success(`Total data uploaded: ${totalDataSize} KB`);
     Logger.success(`Total cost: ${ethers.formatEther(totalCost)} ETH`);
   } catch (e) {
-    const length = e.message.length;
-    Logger.error(length > 500 ? (e.message.substring(0, 245) + " ... " + e.message.substring(length - 245, length)) : e.message);
-    Logger.error(`Execution failed. Please check the error message and try again after making necessary adjustments.`);
+    if (e.code === "REPLACEMENT_UNDERPRICED" || (e.error?.message || "").includes("replacement transaction underpriced")) {
+      // replace error
+      Logger.multi([
+        { color: 'error', text: '❌️ Pending transaction detected for this wallet. \n' },
+        { color: 'error', text: "You are sending a replacement transaction, but the default gas is too low to override the queued tx. Increase 'gasIncPct' to raise gas (recommended: " },
+        { color: 'info', text: "10 ~ 50" },
+        { color: 'error', text: " ). \n" },
+        { color: 'warning', text: 'Note: subsequent transactions will use this gas increase until you change it. \n' }
+      ]);
+    } else {
+      const length = e.message.length;
+      Logger.error(length > 500 ? (e.message.substring(0, 245) + " ... " + e.message.substring(length - 245, length)) : e.message);
+      Logger.error(`Execution failed. Please check the error message and try again after making necessary adjustments.`);
+    }
   } finally {
     await safeClose(uploader);
   }
