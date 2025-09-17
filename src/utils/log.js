@@ -25,6 +25,19 @@ class Logger {
     static log(message) {
         console.log(message);
     }
+
+    static multi(segments) {
+        const mapped = segments.map(seg => {
+            switch (seg.color) {
+                case 'error': return errorColor(seg.text);
+                case 'warning': return warningColor(seg.text);
+                case 'info': return infoColor(seg.text);
+                case 'success': return successColor(seg.text);
+                default: return seg.text;
+            }
+        });
+        console.log(mapped.join(''));
+    }
 }
 
 module.exports = {

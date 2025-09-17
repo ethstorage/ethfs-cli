@@ -139,16 +139,16 @@ class Uploader {
 
 
     // upload
-    async upload(path, gasIncPct, threadPoolSize) {
+    async upload(path, gasIncPct, batchFetchLimit, fileUploadLimit) {
         const results = [];
         // Execution
         const files = recursiveFiles(path, '');
         return new Promise((resolve, reject) => {
             this.#groupFiles(files)
                 .pipe(
-                    mergeMap(fileBatch => this.#fetchFileDataBatch(fileBatch), threadPoolSize),
+                    mergeMap(fileBatch => this.#fetchFileDataBatch(fileBatch), batchFetchLimit),
                     mergeMap(files => from(files)),
-                    mergeMap(info => this.#upload(info, gasIncPct), threadPoolSize)
+                    mergeMap(info => this.#upload(info, gasIncPct, fileUploadLimit === 1), fileUploadLimit)
                 )
                 .subscribe({
                     next: (info) => { results.push(info); },
@@ -158,7 +158,7 @@ class Uploader {
         });
     }
 
-    async #upload(fileInfo, gasIncPct) {
+    async #upload(fileInfo, gasIncPct, isConfirmed) {
         const {path, name, chunkHashes} = fileInfo;
 
         let totalChunkCount = 0;
@@ -199,6 +199,7 @@ class Uploader {
             chunkHashes: chunkHashes,
             type: this.#uploadType,
             gasIncPct: gasIncPct,
+            isConfirmedNonce: isConfirmed,
             callback: callback
         });
         return {
