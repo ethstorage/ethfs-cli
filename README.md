@@ -64,7 +64,7 @@ npx ethfs-cli upload -f <directory|file> -a <address> -p <private-key> -c [chain
 | Harmony Testnet Shard 0    | hmy-b-s0 / 1666700000         |
 | Evmos                      | evmos / 9001                  | 
 | Evmos Testnet              | evmos-testnet / 9000          |
-| QuarkChain L2 Testnet      | qkcl2-b / 3335                |
+| QuarkChain L2 Testnet      | qkc-l2-t / 110011             |
  
 
 ## Usage
