@@ -22,7 +22,7 @@ const SHORT_NAME_POLYGON_MUMBAI = "maticmum";
 const SHORT_NAME_POLYGON_ZKEVM_TEST = "zkevmtest";
 const SHORT_NAME_QUARKCHAIN = "qkc-s0";
 const SHORT_NAME_QUARKCHAIN_DEVNET = "qkc-d-s0";
-const SHORT_NAME_QUARKCHAIN_L2_DELTA = "qkcl2-d";
+const SHORT_NAME_QUARKCHAIN_L2_DELTA = "qkc-l2-t";
 
 // ethstorage
 const SHORT_NAME_ETHSTORAGE_MAINNET = "es-m";
