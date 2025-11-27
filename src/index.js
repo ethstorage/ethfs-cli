@@ -11,6 +11,7 @@ const {
   TYPE_CALLDATA,
   TYPE_BLOB,
   QUARKCHAIN_L2_DELTA_CHAIN_ID,
+  QUARKCHAIN_L2_MAINNET_CHAIN_ID,
   SEPOLIA_CHAIN_ID,
   DEFAULT_THREAD_POOL_SIZE_ONE,
   DEFAULT_THREAD_POOL_SIZE_LOW,
@@ -211,7 +212,7 @@ const estimateAndUpload = async (key, domain, path, type, rpc, chainId, gasIncPc
   let batchFetchLimit, fileUploadLimit;
   if (threadPoolSize) {
     batchFetchLimit = fileUploadLimit = Number(threadPoolSize);
-  } else if (handler.chainId === QUARKCHAIN_L2_DELTA_CHAIN_ID) {
+  } else if (handler.chainId === QUARKCHAIN_L2_DELTA_CHAIN_ID || handler.chainId === QUARKCHAIN_L2_MAINNET_CHAIN_ID) {
     batchFetchLimit = fileUploadLimit = DEFAULT_THREAD_POOL_SIZE_HIGH;
   } else if (handler.chainId === ETHEREUM_CHAIN_ID || handler.chainId === SEPOLIA_CHAIN_ID) {
     batchFetchLimit = DEFAULT_THREAD_POOL_SIZE_LOW;
