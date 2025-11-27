@@ -65,6 +65,7 @@ npx ethfs-cli upload -f <directory|file> -a <address> -p <private-key> -c [chain
 | Evmos                      | evmos / 9001                  | 
 | Evmos Testnet              | evmos-testnet / 9000          |
 | QuarkChain L2 Testnet      | qkc-l2-t / 110011             |
+| QuarkChain L2 Mainnet      | qkc-l2 / 100011               |
  
 
 ## Usage
