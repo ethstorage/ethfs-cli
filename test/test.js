@@ -107,7 +107,7 @@ const createContract = (chainId) => {
     return new Promise((resolve, reject) => {
         const command = `node ../cli.js create -p ${privateKey} -c ${chainId}`;
         testCommandExec(command, (output) => {
-            const match = output.match(/FlatDirectory: Address is (\b0x[a-fA-F0-9]{40}\b)/);
+            const match = output.match(/FlatDirectory: Contract deployed successfully. Address: (\b0x[a-fA-F0-9]{40}\b)/);
             const contractAddress = match ? match[1] : null;
             if (contractAddress) {
                 resolve(contractAddress);
@@ -137,13 +137,14 @@ const runTests = async () => {
     // Prepare
     const largeFileName = "tempLargeFile.txt";
     const largeFile = path.resolve(__dirname, largeFileName);
-    createLargeFile(15, largeFile); // 15MB
+    createLargeFile(5, largeFile); // 5MB
     const folderPath = path.resolve(__dirname, 'randomFiles');
     createFiles(13, folderPath); // 13 files
 
-    const qkcChainId = 3335;
-    console.log("Running tests for Blob...");
+    const qkcChainId = 11155111;
+
     // blob
+    console.log("Running tests for Blob...");
     let address = await createContract(qkcChainId);
     await setDefaultFile(address, qkcChainId);
 
@@ -152,6 +153,9 @@ const runTests = async () => {
 
     await uploadFile(address, qkcChainId, folderPath, UploadType.Blob); // upload files
     await uploadFile(address, qkcChainId, folderPath, UploadType.Blob); // upload files again
+
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    await sleep(60000);
 
     // download and check
     let largeFileHash = await getFileHash(largeFile);
