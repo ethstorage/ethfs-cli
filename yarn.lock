@@ -7,6 +7,37 @@
   resolved "https://registry.npmjs.org/@adraffy/ens-normalize/-/ens-normalize-1.10.1.tgz#63430d04bd8c5e74f8d7d049338f1cd9d4f02069"
   integrity sha512-96Z2IP3mYmF1Xg2cDm8f1gWGf/HUVedQ3FMifV4kG/PQ4yEP51xDtRAEfhVNt5f/uzpNkZHwWQuUcu6D6K+Ekw==
 
+"@emnapi/core@^1.7.1":
+  version "1.7.1"
+  resolved "https://registry.npmjs.org/@emnapi/core/-/core-1.7.1.tgz#3a79a02dbc84f45884a1806ebb98e5746bdfaac4"
+  integrity sha512-o1uhUASyo921r2XtHYOHy7gdkGLge8ghBEQHMWmyJFoXlpU58kIrhhN3w26lpQb6dspetweapMn2CSNwQ8I4wg==
+  dependencies:
+    "@emnapi/wasi-threads" "1.1.0"
+    tslib "^2.4.0"
+
+"@emnapi/runtime@^1.7.1":
+  version "1.7.1"
+  resolved "https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.7.1.tgz#a73784e23f5d57287369c808197288b52276b791"
+  integrity sha512-PVtJr5CmLwYAU9PZDMITZoR5iAOShYREoR45EyyLrbntV50mdePTgUn4AmOw90Ifcj+x2kRjdzr1HP3RrNiHGA==
+  dependencies:
+    tslib "^2.4.0"
+
+"@emnapi/wasi-threads@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.npmjs.org/@emnapi/wasi-threads/-/wasi-threads-1.1.0.tgz#60b2102fddc9ccb78607e4a3cf8403ea69be41bf"
+  integrity sha512-WI0DdZ8xFSbgMjR1sFsKABJ/C5OnRrjT06JXbZKexJGrDuPTzZdDYfFlsgcCXCyf+suG5QU2e/y1Wo2V/OapLQ==
+  dependencies:
+    tslib "^2.4.0"
+
+"@napi-rs/wasm-runtime@^1.0.7":
+  version "1.1.0"
+  resolved "https://registry.npmjs.org/@napi-rs/wasm-runtime/-/wasm-runtime-1.1.0.tgz#c0180393d7862cff0d412e3e1a7c3bd5ea6d9b2f"
+  integrity sha512-Fq6DJW+Bb5jaWE69/qOE0D1TUN9+6uWhCeZpdnSBk14pjLcCWR7Q8n49PTSPHazM37JqrsdpEthXy2xn6jWWiA==
+  dependencies:
+    "@emnapi/core" "^1.7.1"
+    "@emnapi/runtime" "^1.7.1"
+    "@tybys/wasm-util" "^0.10.1"
+
 "@noble/curves@1.2.0":
   version "1.2.0"
   resolved "https://registry.npmjs.org/@noble/curves/-/curves-1.2.0.tgz#92d7e12e4e49b23105a2555c6984d41733d65c35"
@@ -14,32 +45,17 @@
   dependencies:
     "@noble/hashes" "1.3.2"
 
-"@noble/curves@~1.8.1":
-  version "1.8.1"
-  resolved "https://registry.npmjs.org/@noble/curves/-/curves-1.8.1.tgz#19bc3970e205c99e4bdb1c64a4785706bce497ff"
-  integrity sha512-warwspo+UYUPep0Q+vtdVB4Ugn8GGQj8iyB3gnRWsztmUHTI3S1nhdiWNsPUGL0vud7JlRRk1XEu7Lq1KGTnMQ==
-  dependencies:
-    "@noble/hashes" "1.7.1"
-
 "@noble/hashes@1.3.2":
   version "1.3.2"
   resolved "https://registry.npmjs.org/@noble/hashes/-/hashes-1.3.2.tgz#6f26dbc8fbc7205873ce3cee2f690eba0d421b39"
   integrity sha512-MVC8EAQp7MvEcm30KWENFjgR+Mkmf+D189XJTkFIlwohU5hcBbn1ZkKq7KVTi2Hme3PMGF390DaL52beVrIihQ==
 
-"@noble/hashes@1.7.1", "@noble/hashes@~1.7.1":
-  version "1.7.1"
-  resolved "https://registry.npmjs.org/@noble/hashes/-/hashes-1.7.1.tgz#5738f6d765710921e7a751e00c20ae091ed8db0f"
-  integrity sha512-B8XBPsn4vT/KJAGqDzbwztd+6Yte3P4V7iafm24bxgDe/mlRuK6xmWPuCNrKt2vDafZ8MfJLlchDG/vYafQEjQ==
-
-"@paulmillr/trusted-setups@^0.1.2":
-  version "0.1.2"
-  resolved "https://registry.npmjs.org/@paulmillr/trusted-setups/-/trusted-setups-0.1.2.tgz#cec89fde3b349c7a91e4e6e4900cc8a153715e47"
-  integrity sha512-NKpT0G4Blj+Vp9lbfczb7iPJm3B4njpzX8NXiQs8G51N4CLndCvLqEvksFlTJbNLwl3iwsGZHSvJRdfhfOHLwQ==
-
-"@scure/base@~1.2.2":
-  version "1.2.4"
-  resolved "https://registry.npmjs.org/@scure/base/-/base-1.2.4.tgz#002eb571a35d69bdb4c214d0995dff76a8dcd2a9"
-  integrity sha512-5Yy9czTO47mqz+/J8GM6GIId4umdCk1wc1q8rKERQulIoc8VP9pzDcghv10Tl2E7R96ZUx/PhND3ESYUQX8NuQ==
+"@tybys/wasm-util@^0.10.1":
+  version "0.10.1"
+  resolved "https://registry.npmjs.org/@tybys/wasm-util/-/wasm-util-0.10.1.tgz#ecddd3205cf1e2d5274649ff0eedd2991ed7f414"
+  integrity sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==
+  dependencies:
+    tslib "^2.4.0"
 
 "@types/node@18.15.13":
   version "18.15.13"
@@ -181,10 +197,10 @@ ethers@^6.13.1:
     tslib "2.4.0"
     ws "8.17.1"
 
-ethers@^6.15.0:
-  version "6.15.0"
-  resolved "https://registry.npmjs.org/ethers/-/ethers-6.15.0.tgz#2980f2a3baf0509749b7e21f8692fa8a8349c0e3"
-  integrity sha512-Kf/3ZW54L4UT0pZtsY/rf+EkBU7Qi5nnhonjUb8yTXcxH3cdcWrV2cRyk0Xk/4jK6OoHhxxZHriyhje20If2hQ==
+ethers@^6.16.0:
+  version "6.16.0"
+  resolved "https://registry.npmjs.org/ethers/-/ethers-6.16.0.tgz#fff9b4f05d7a359c774ad6e91085a800f7fccf65"
+  integrity sha512-U1wulmetNymijEhpSEQ7Ct/P/Jw9/e7R1j5XIbPRydgV2DjLVMsULDlNksq3RQnFgKoLlZf88ijYtWEXcPa07A==
   dependencies:
     "@adraffy/ens-normalize" "1.10.1"
     "@noble/curves" "1.2.0"
@@ -194,15 +210,17 @@ ethers@^6.15.0:
     tslib "2.7.0"
     ws "8.17.1"
 
-ethstorage-sdk@^4.1.3:
-  version "4.1.3"
-  resolved "https://registry.npmjs.org/ethstorage-sdk/-/ethstorage-sdk-4.1.3.tgz#5d4037cd724d2185c1d94c1ec29544639c653810"
-  integrity sha512-4SwIT/8AVfSES9uGG8Z4qyORtm6faUEu+NSgIszhlkOrrlxNCM1D9K4gImKHc2K6h8p62i6g3JGzbL58vXPynA==
+ethstorage-sdk@^4.2.4:
+  version "4.2.4"
+  resolved "https://registry.npmjs.org/ethstorage-sdk/-/ethstorage-sdk-4.2.4.tgz#f21ea08871804b2b231f68cfb0378c378649f87a"
+  integrity sha512-JzOUT2jRtzEEyLrdVcb3CYghR5tGrGO0WGWFpgJkzEsXHwBAJ+D6S6HoxCJT8K6NvczC8BVke7ncdysoBNgpew==
   dependencies:
     async-mutex "^0.5.0"
     dotenv "^16.4.5"
-    ethers "^6.15.0"
-    js-kzg "^1.0.4"
+    ethers "^6.16.0"
+    js-kzg "^2.0.2"
+    p-limit "^7.2.0"
+    rxjs "^7.8.2"
 
 has-flag@^4.0.0:
   version "4.0.0"
@@ -229,21 +247,19 @@ is-unicode-supported@^0.1.0:
   resolved "https://registry.npmjs.org/is-unicode-supported/-/is-unicode-supported-0.1.0.tgz#3f26c76a809593b52bfa2ecb5710ed2779b522a7"
   integrity sha512-knxG2q4UC3u8stRGyAVJCOdxFmv5DZiRcdlIaAQXAbSfJya+OhopNotLQrstBhququ4ZpuKbDc/8S6mgXgPFPw==
 
-js-kzg@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.npmjs.org/js-kzg/-/js-kzg-1.0.4.tgz#5dba2c7a157c3848178592b6666afc06144313ff"
-  integrity sha512-rn5zL47kaWeMJ8CvUCS+nIYNaJPvArUzubeYP5ZznucVR7qXrkE/GgRCmxX2j3xDlkOYbZobWEOvvkv4JoE3ew==
+js-kzg@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.npmjs.org/js-kzg/-/js-kzg-2.0.2.tgz#3a76e06830471fd23a6d4b96e63d76651daf6c52"
+  integrity sha512-6Ece3TH+UIcW/8yN5fcxgKtmlMC7+aUsuH6dzvs0sy3jtDqdBuKg5lACV0JO5X2rCqX4uA3yNefnSW92wlsAAA==
   dependencies:
-    "@paulmillr/trusted-setups" "^0.1.2"
     comlink "^4.4.2"
-    kzg-wasm "^0.5.0"
-    micro-eth-signer "^0.14.0"
-    workerpool "^9.2.0"
+    kzg-wasm "^1.0.0"
+    rust-kzg-node "^1.0.0"
 
-kzg-wasm@^0.5.0:
-  version "0.5.0"
-  resolved "https://registry.npmjs.org/kzg-wasm/-/kzg-wasm-0.5.0.tgz#6540a1417c2c3d359d1df1b5fd3f49f812bc9302"
-  integrity sha512-LK1M0dm62NKEyhaM6S0pMHKzyAB+KySUlbT+z/+N6fZvcg0jEqSAiz6YHPk8MWIadlT0vFx1uT6Pf9dLzhTn4g==
+kzg-wasm@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/kzg-wasm/-/kzg-wasm-1.0.0.tgz#b8dfe7c64c249040be835e9ee227f13910cba354"
+  integrity sha512-jMvFK5uiV41BgcLrCaHbNeDeQeZdoTcqOYm7yS1Xdvl4MAykjou+SLlnt+P1bWz5C0YWHOmgUUjIpCuU83zNTA==
 
 log-symbols@^4.1.0:
   version "4.1.0"
@@ -252,22 +268,6 @@ log-symbols@^4.1.0:
   dependencies:
     chalk "^4.1.0"
     is-unicode-supported "^0.1.0"
-
-micro-eth-signer@^0.14.0:
-  version "0.14.0"
-  resolved "https://registry.npmjs.org/micro-eth-signer/-/micro-eth-signer-0.14.0.tgz#8aa1fe997d98d6bdf42f2071cef7eb01a66ecb22"
-  integrity sha512-5PLLzHiVYPWClEvZIXXFu5yutzpadb73rnQCpUqIHu3No3coFuWQNfE5tkBQJ7djuLYl6aRLaS0MgWJYGoqiBw==
-  dependencies:
-    "@noble/curves" "~1.8.1"
-    "@noble/hashes" "~1.7.1"
-    micro-packed "~0.7.2"
-
-micro-packed@~0.7.2:
-  version "0.7.2"
-  resolved "https://registry.npmjs.org/micro-packed/-/micro-packed-0.7.2.tgz#7f9decd6c11fe2617bc85ad4ebc0ad48bf423f36"
-  integrity sha512-HJ/u8+tMzgrJVAl6P/4l8KGjJSA3SCZaRb1m4wpbovNScCSmVOGUYbkkcoPPcknCHWPpRAdjy+yqXqyQWf+k8g==
-  dependencies:
-    "@scure/base" "~1.2.2"
 
 mimic-fn@^2.1.0:
   version "2.1.0"
@@ -296,6 +296,13 @@ ora@^5.4.1:
     strip-ansi "^6.0.0"
     wcwidth "^1.0.1"
 
+p-limit@^7.2.0:
+  version "7.2.0"
+  resolved "https://registry.npmjs.org/p-limit/-/p-limit-7.2.0.tgz#afcf6b5a86d093660140497dda0e640dd01a7b3b"
+  integrity sha512-ATHLtwoTNDloHRFFxFJdHnG6n2WUeFjaR8XQMFdKIv0xkXjrER8/iG9iu265jOM95zXHAfv9oTkqhrfbIzosrQ==
+  dependencies:
+    yocto-queue "^1.2.1"
+
 readable-stream@^3.4.0:
   version "3.6.2"
   resolved "https://registry.npmjs.org/readable-stream/-/readable-stream-3.6.2.tgz#56a9b36ea965c00c5a93ef31eb111a0f11056967"
@@ -313,10 +320,85 @@ restore-cursor@^3.1.0:
     onetime "^5.1.0"
     signal-exit "^3.0.2"
 
+rust-kzg-node-darwin-arm64@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/rust-kzg-node-darwin-arm64/-/rust-kzg-node-darwin-arm64-1.0.0.tgz#928587562176a5e637d9f4307eb6d0e16587b586"
+  integrity sha512-YlrVxHZP7MTOLN4g+3v1u1q3iXrAELC5Tjdxe9RXuQA+I8eswd3AAJKnG/+CAEEl9aIZSm90AYWqgitvTY1B4w==
+
+rust-kzg-node-darwin-x64@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/rust-kzg-node-darwin-x64/-/rust-kzg-node-darwin-x64-1.0.0.tgz#ee05fcb4ddbc30e9fe0cc7e3431b2533be06e0fd"
+  integrity sha512-zlzIyg71IC7qBjlZpofrQ5QiVQtRItjXWDdbOzWxMYoZRbt9VDhNAVmN4Srkk63+WLuRaFQl1gIzvNvhAamFnw==
+
+rust-kzg-node-freebsd-x64@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/rust-kzg-node-freebsd-x64/-/rust-kzg-node-freebsd-x64-1.0.0.tgz#e3d088cc076ab1570cf9e8b44c16b364b8c3b605"
+  integrity sha512-lYuSjeSScgQgkt/yEFx7CrPvfMwXgteZZj12lIcduakk+qZafr9tTRs7vJx/1pT49BrmgUlbFhcS6KnWnhkThg==
+
+rust-kzg-node-linux-arm64-gnu@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/rust-kzg-node-linux-arm64-gnu/-/rust-kzg-node-linux-arm64-gnu-1.0.0.tgz#534a3eafdcf05bebc027450afb6b3d1754a4e83b"
+  integrity sha512-AkGpx5kcr15VIuHLmIXJTLqTQ70zHdNeqebQwk1U+XeF9qI6fR807c9Pr7jISjQ4lFd/vQCs4d5ghkoq7HQC1A==
+
+rust-kzg-node-linux-arm64-musl@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/rust-kzg-node-linux-arm64-musl/-/rust-kzg-node-linux-arm64-musl-1.0.0.tgz#0eea6617f03e694e14827a89d8a41bb32c9d161f"
+  integrity sha512-RbgF1J4wTT7zPnjCMhfey12GGdVCMd2P3JXaVQaeaUODks1qGInd+jAPtxo+o8ritQthgh6boCjQgnD91gTxAw==
+
+rust-kzg-node-linux-x64-gnu@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/rust-kzg-node-linux-x64-gnu/-/rust-kzg-node-linux-x64-gnu-1.0.0.tgz#2342e6d52daca59210743e29ee5190c2e86d8ede"
+  integrity sha512-1txZo1tvAwqJ1BhcEmh4ScRj/b5DqwzEgDSzs6cclLqM4Sr7KLb47Z8eVzyanZOTGpg2pFUJ5LU3geuv8LwMhw==
+
+rust-kzg-node-linux-x64-musl@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/rust-kzg-node-linux-x64-musl/-/rust-kzg-node-linux-x64-musl-1.0.0.tgz#8d22cbe936df5eb96f02c78efe42ed4572d29015"
+  integrity sha512-bFA7eXIYDp6Ntcekj+fmSFgKOJel3yC79cjATkw4weDZRdwDqSz9TdxcmGvjIH4I6xY9w+ovSP4t7TxYNxIwkA==
+
+rust-kzg-node-wasm32-wasi@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/rust-kzg-node-wasm32-wasi/-/rust-kzg-node-wasm32-wasi-1.0.0.tgz#9718286cd3f66452681a32a6f374400bba57ebbf"
+  integrity sha512-4IvSJpcmNNCQ6THlnU4uhRV0yjjjaViqq5YQVU75Pme4EuG6wHIvF3ZXbAjGXKTWWHjiY6RuyPPLiUmf3UD3sg==
+  dependencies:
+    "@napi-rs/wasm-runtime" "^1.0.7"
+
+rust-kzg-node-win32-arm64-msvc@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/rust-kzg-node-win32-arm64-msvc/-/rust-kzg-node-win32-arm64-msvc-1.0.0.tgz#be264c0678acda7ad3e5f1cc72eec81ab4c045dd"
+  integrity sha512-DiiVoMWYY7W0yI2+LYQEpQAAIw56PJNx+NjhPNICAthjFG50mwzJPA38OR5IlxA/Vcy7kP7NdFgAuXrPUJH+bA==
+
+rust-kzg-node-win32-x64-msvc@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/rust-kzg-node-win32-x64-msvc/-/rust-kzg-node-win32-x64-msvc-1.0.0.tgz#4fb97f2ca311b72683fa8f25c56a6cb17210c484"
+  integrity sha512-iP53lhYBefG+ujyNiBd8yXQ6thrtFy8Yb9OPT6odYQp2k+IDBwQ0z2yQCYj5L/yJvoxuGTFLXsfnPZeiZu/M6A==
+
+rust-kzg-node@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/rust-kzg-node/-/rust-kzg-node-1.0.0.tgz#a21d68fd6eb8ce6351400663d3846aa739859931"
+  integrity sha512-fNDdmxuFF7fqeMpkpVQfDlCaWtCiq37axNtwheOt4PB36DyzCMg+LJZJeRDS7e0UJh8p5mWGRnnNPkbY5bmsww==
+  optionalDependencies:
+    rust-kzg-node-darwin-arm64 "1.0.0"
+    rust-kzg-node-darwin-x64 "1.0.0"
+    rust-kzg-node-freebsd-x64 "1.0.0"
+    rust-kzg-node-linux-arm64-gnu "1.0.0"
+    rust-kzg-node-linux-arm64-musl "1.0.0"
+    rust-kzg-node-linux-x64-gnu "1.0.0"
+    rust-kzg-node-linux-x64-musl "1.0.0"
+    rust-kzg-node-wasm32-wasi "1.0.0"
+    rust-kzg-node-win32-arm64-msvc "1.0.0"
+    rust-kzg-node-win32-x64-msvc "1.0.0"
+
 rxjs@^7.8.1:
   version "7.8.1"
   resolved "https://registry.npmjs.org/rxjs/-/rxjs-7.8.1.tgz#6f6f3d99ea8044291efd92e7c7fcf562c4057543"
   integrity sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==
+  dependencies:
+    tslib "^2.1.0"
+
+rxjs@^7.8.2:
+  version "7.8.2"
+  resolved "https://registry.npmjs.org/rxjs/-/rxjs-7.8.2.tgz#955bc473ed8af11a002a2be52071bf475638607b"
+  integrity sha512-dhKf903U/PQZY6boNNtAGdWbG85WAbjT/1xYoZIC7FAY0yWapOBQVsVrDl58W86//e1VpMNBtRV4MaXfdMySFA==
   dependencies:
     tslib "^2.1.0"
 
@@ -383,12 +465,12 @@ wcwidth@^1.0.1:
   dependencies:
     defaults "^1.0.3"
 
-workerpool@^9.2.0:
-  version "9.2.0"
-  resolved "https://registry.npmjs.org/workerpool/-/workerpool-9.2.0.tgz#f74427cbb61234708332ed8ab9cbf56dcb1c4371"
-  integrity sha512-PKZqBOCo6CYkVOwAxWxQaSF2Fvb5Iv2fCeTP7buyWI2GiynWr46NcXSgK/idoV6e60dgCBfgYc+Un3HMvmqP8w==
-
 ws@8.17.1:
   version "8.17.1"
   resolved "https://registry.npmjs.org/ws/-/ws-8.17.1.tgz#9293da530bb548febc95371d90f9c878727d919b"
   integrity sha512-6XQFvXTkbfUOZOKKILFG1PDK2NDQs4azKQl26T0YS5CxqWLgXajbPZ+h4gZekJyRqFU8pvnbAbbs/3TgRPy+GQ==
+
+yocto-queue@^1.2.1:
+  version "1.2.2"
+  resolved "https://registry.npmjs.org/yocto-queue/-/yocto-queue-1.2.2.tgz#3e09c95d3f1aa89a58c114c99223edf639152c00"
+  integrity sha512-4LCcse/U2MHZ63HAJVE+v71o7yOdIe4cZ70Wpf8D/IyjDKYQLV5GD46B+hSTjJsvV5PztjvHoU580EftxjDZFQ==
